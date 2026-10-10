@@ -4,11 +4,11 @@
 
 #include "IHsm.hpp"
 
-class SecureElement : public IHsm
+class LibtropicSecureElement : public IHsm
 {
 public:
-    SecureElement();
-    ~SecureElement();
+    LibtropicSecureElement();
+    ~LibtropicSecureElement();
 
     SystemStatus init() override;
     SystemStatus status() override;

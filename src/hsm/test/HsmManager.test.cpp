@@ -3,13 +3,13 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "MockAuditLogger.hpp"
-#include "MockSecureElement.hpp"
+#include "MockLibtropicSecureElement.hpp"
 
 // TODO: add empty payload test for sign. Should fail
 
 TEST_CASE("hardware status")
 {
-    MockSecureElement mock;
+    MockLibtropicSecureElement mock;
     MockAuditLogger mock_logger;
     HsmManager hsm(mock, mock_logger);
 
@@ -99,7 +99,7 @@ TEST_CASE("hardware status")
 
 TEST_CASE("erase key")
 {
-    MockSecureElement mock;
+    MockLibtropicSecureElement mock;
     MockAuditLogger mock_logger;
     HsmManager hsm(mock, mock_logger);
     uint8_t slot = 29;
@@ -190,7 +190,7 @@ TEST_CASE("erase key")
 
 TEST_CASE("generate key")
 {
-    MockSecureElement mock;
+    MockLibtropicSecureElement mock;
     MockAuditLogger mock_logger;
     HsmManager hsm(mock, mock_logger);
     uint8_t slot = 6;
@@ -294,7 +294,7 @@ TEST_CASE("generate key")
 
 TEST_CASE("read key")
 {
-    MockSecureElement mock;
+    MockLibtropicSecureElement mock;
     MockAuditLogger mock_logger;
     HsmManager hsm(mock, mock_logger);
     uint8_t slot = 8;
@@ -387,7 +387,7 @@ TEST_CASE("read key")
 
 TEST_CASE("list all keys")
 {
-    MockSecureElement mock;
+    MockLibtropicSecureElement mock;
     MockAuditLogger mock_logger;
     HsmManager hsm(mock, mock_logger);
     std::vector<std::vector<uint8_t>> pubKeys;
@@ -478,7 +478,7 @@ TEST_CASE("list all keys")
 
 TEST_CASE("sign")
 {
-    MockSecureElement mock;
+    MockLibtropicSecureElement mock;
     MockAuditLogger mock_logger;
     HsmManager hsm(mock, mock_logger);
     uint8_t slot = 15;
@@ -757,7 +757,7 @@ TEST_CASE("sign")
 
 TEST_CASE("verify")
 {
-    MockSecureElement mock;
+    MockLibtropicSecureElement mock;
     MockAuditLogger mock_logger;
     HsmManager hsm(mock, mock_logger);
     std::vector<uint8_t> payload;

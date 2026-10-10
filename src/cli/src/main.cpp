@@ -6,7 +6,7 @@
 #include "CliDisplay.hpp"
 #include "CliParser.hpp"
 #include "HsmManager.hpp"
-#include "SecureElement.hpp"
+#include "LibtropicSecureElement.hpp"
 
 std::string getDbPath();
 
@@ -42,7 +42,7 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
-    SecureElement se;
+    LibtropicSecureElement se;
     AuditLogger logger(getDbPath());
     HsmManager hsm(se, logger);
 
