@@ -2,9 +2,9 @@
 
 #include <memory>
 
-#include "ISecureElement.hpp"
+#include "IHsm.hpp"
 
-class SecureElement : public ISecureElement
+class SecureElement : public IHsm
 {
 public:
     SecureElement();

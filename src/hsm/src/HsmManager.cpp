@@ -1,6 +1,6 @@
 #include "HsmManager.hpp"
 
-HsmManager::HsmManager(ISecureElement& se, IAuditLogger& logger) : m_se(se), m_logger(logger)
+HsmManager::HsmManager(IHsm& se, IAuditLogger& logger) : m_se(se), m_logger(logger)
 {
 }
 
