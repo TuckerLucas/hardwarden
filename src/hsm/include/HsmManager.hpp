@@ -4,12 +4,12 @@
 #include <string>
 
 #include "IAuditLogger.hpp"
-#include "ISecureElement.hpp"
+#include "IHsm.hpp"
 
 class HsmManager
 {
 public:
-    HsmManager(ISecureElement& se, IAuditLogger& logger);
+    HsmManager(IHsm& se, IAuditLogger& logger);
 
     SystemStatus status();
     SystemStatus eraseKey(uint8_t slot);
@@ -26,6 +26,6 @@ public:
                                    std::string filepath = "");
 
 private:
-    ISecureElement& m_se;
+    IHsm& m_se;
     IAuditLogger& m_logger;
 };

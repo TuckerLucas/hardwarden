@@ -6,7 +6,7 @@
 #include "HsmTypes.hpp"
 #include "SystemStatus.hpp"
 
-class ISecureElement
+class IHsm
 {
 public:
     virtual SystemStatus init() = 0;
@@ -21,5 +21,5 @@ public:
                                 std::vector<uint8_t> signature) = 0;
     virtual SystemStatus deinit() = 0;
 
-    virtual ~ISecureElement() = default;
+    virtual ~IHsm() = default;
 };

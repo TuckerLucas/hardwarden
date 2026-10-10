@@ -6,7 +6,7 @@
 
 #include "AuditTypes.hpp"
 #include "CliTypes.hpp"
-#include "ISecureElement.hpp"
+#include "IHsm.hpp"
 
 class CliDisplay
 {
