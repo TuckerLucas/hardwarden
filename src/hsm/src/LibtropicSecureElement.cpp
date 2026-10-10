@@ -1,4 +1,4 @@
-#include "SecureElement.hpp"
+#include "LibtropicSecureElement.hpp"
 
 #include <openssl/bn.h>
 #include <openssl/ec.h>
@@ -23,20 +23,20 @@ const uint8_t lt_sh0pub_prod0[] = {0xf9, 0x75, 0xeb, 0x3c, 0x2f, 0xd7, 0x90, 0xc
                                    0x15, 0x57, 0xa5, 0x03, 0x17, 0x80, 0xc9, 0xaa, 0xfa, 0x14, 0x0d,
                                    0xa2, 0x8f, 0x55, 0xe7, 0x51, 0x57, 0x37, 0xb2, 0x50, 0x2c};
 
-struct SecureElement::Impl
+struct LibtropicSecureElement::Impl
 {
     lt_handle_t handle = {0};
     lt_dev_linux_spi_t device = {0};
     lt_ctx_mbedtls_v4_t crypto_ctx = {0};
 };
 
-SecureElement::SecureElement() : m_impl(std::make_unique<Impl>())
+LibtropicSecureElement::LibtropicSecureElement() : m_impl(std::make_unique<Impl>())
 {
 }
 
-SecureElement::~SecureElement() = default;
+LibtropicSecureElement::~LibtropicSecureElement() = default;
 
-SystemStatus SecureElement::init()
+SystemStatus LibtropicSecureElement::init()
 {
     if (psa_crypto_init() != PSA_SUCCESS)
     {
@@ -74,7 +74,7 @@ SystemStatus SecureElement::init()
     return SystemStatus::OK;
 }
 
-SystemStatus SecureElement::status()
+SystemStatus LibtropicSecureElement::status()
 {
     uint8_t recv_buf[PING_MSG_SIZE];
 
@@ -87,7 +87,7 @@ SystemStatus SecureElement::status()
     return SystemStatus::OK;
 }
 
-SystemStatus SecureElement::eraseKey(uint8_t slot)
+SystemStatus LibtropicSecureElement::eraseKey(uint8_t slot)
 {
     if (lt_ecc_key_erase(&m_impl->handle, static_cast<lt_ecc_slot_t>(slot)) != LT_OK)
     {
@@ -98,7 +98,7 @@ SystemStatus SecureElement::eraseKey(uint8_t slot)
     return SystemStatus::OK;
 }
 
-SystemStatus SecureElement::generateKey(uint8_t slot, Curve curve)
+SystemStatus LibtropicSecureElement::generateKey(uint8_t slot, Curve curve)
 {
     lt_ecc_curve_type_t lt_curve = (curve == Curve::P256) ? TR01_CURVE_P256 : TR01_CURVE_ED25519;
 
@@ -114,7 +114,7 @@ SystemStatus SecureElement::generateKey(uint8_t slot, Curve curve)
     return SystemStatus::OK;
 }
 
-SystemStatus SecureElement::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
+SystemStatus LibtropicSecureElement::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
 {
     uint8_t raw_key[64];
     lt_ecc_curve_type_t curve;
@@ -137,7 +137,7 @@ SystemStatus SecureElement::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
     return SystemStatus::OK;
 }
 
-SystemStatus SecureElement::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
+SystemStatus LibtropicSecureElement::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
 {
     lt_ret_t ret;
     int key_len;
@@ -173,8 +173,8 @@ SystemStatus SecureElement::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
     return SystemStatus::OK;
 }
 
-SystemStatus SecureElement::sign(uint8_t slot, Curve curve, std::vector<uint8_t> payload,
-                                 std::vector<uint8_t>& signature)
+SystemStatus LibtropicSecureElement::sign(uint8_t slot, Curve curve, std::vector<uint8_t> payload,
+                                          std::vector<uint8_t>& signature)
 {
     SystemStatus result;
 
@@ -188,15 +188,15 @@ SystemStatus SecureElement::sign(uint8_t slot, Curve curve, std::vector<uint8_t>
     }
     else
     {
-        assert(false && "Unhandled curve value in SecureElement::sign()");
+        assert(false && "Unhandled curve value in LibtropicSecureElement::sign()");
         return SystemStatus::HSM_ERROR_SIGN;
     }
 
     return result;
 }
 
-SystemStatus SecureElement::signEd25519(uint8_t slot, std::vector<uint8_t> payload,
-                                        std::vector<uint8_t>& signature)
+SystemStatus LibtropicSecureElement::signEd25519(uint8_t slot, std::vector<uint8_t> payload,
+                                                 std::vector<uint8_t>& signature)
 {
     uint8_t rs[64];
 
@@ -212,8 +212,8 @@ SystemStatus SecureElement::signEd25519(uint8_t slot, std::vector<uint8_t> paylo
     return SystemStatus::OK;
 }
 
-SystemStatus SecureElement::signP256(uint8_t slot, std::vector<uint8_t> payload,
-                                     std::vector<uint8_t>& signature)
+SystemStatus LibtropicSecureElement::signP256(uint8_t slot, std::vector<uint8_t> payload,
+                                              std::vector<uint8_t>& signature)
 {
     uint8_t hash[32];
     size_t hash_length;
@@ -242,8 +242,9 @@ SystemStatus SecureElement::signP256(uint8_t slot, std::vector<uint8_t> payload,
     return SystemStatus::OK;
 }
 
-SystemStatus SecureElement::verify(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
-                                   std::vector<uint8_t> signature)
+SystemStatus LibtropicSecureElement::verify(std::vector<uint8_t> pubKey,
+                                            std::vector<uint8_t> payload,
+                                            std::vector<uint8_t> signature)
 {
     if (pubKey.size() == 32)
     {
@@ -256,13 +257,14 @@ SystemStatus SecureElement::verify(std::vector<uint8_t> pubKey, std::vector<uint
     else
     {
         // This should never happen if parser validation is correct
-        assert(false && "Invalid public key size in SecureElement::verify()");
+        assert(false && "Invalid public key size in LibtropicSecureElement::verify()");
         return SystemStatus::HSM_ERROR_VERIFY;
     }
 }
 
-SystemStatus SecureElement::verifyEd25519(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
-                                          std::vector<uint8_t> signature)
+SystemStatus LibtropicSecureElement::verifyEd25519(std::vector<uint8_t> pubKey,
+                                                   std::vector<uint8_t> payload,
+                                                   std::vector<uint8_t> signature)
 {
     // Create EVP_PKEY from raw Ed25519 public key
     EVP_PKEY* pkey =
@@ -300,8 +302,9 @@ SystemStatus SecureElement::verifyEd25519(std::vector<uint8_t> pubKey, std::vect
     return (result == 1) ? SystemStatus::OK : SystemStatus::HSM_ERROR_VERIFY_INVALID_SIGNATURE;
 }
 
-SystemStatus SecureElement::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
-                                       std::vector<uint8_t> signature)
+SystemStatus LibtropicSecureElement::verifyP256(std::vector<uint8_t> pubKey,
+                                                std::vector<uint8_t> payload,
+                                                std::vector<uint8_t> signature)
 {
     // Hash the payload with SHA-256
     unsigned char hash[32];
@@ -436,7 +439,7 @@ SystemStatus SecureElement::verifyP256(std::vector<uint8_t> pubKey, std::vector<
 }
 
 // TODO: Consider refactoring this function somewhere else
-std::vector<uint8_t> SecureElement::rawSignatureToDer(const std::vector<uint8_t>& raw_sig)
+std::vector<uint8_t> LibtropicSecureElement::rawSignatureToDer(const std::vector<uint8_t>& raw_sig)
 {
     // raw_sig is 64 bytes: r (32 bytes) || s (32 bytes)
     if (raw_sig.size() != 64)
@@ -482,7 +485,7 @@ std::vector<uint8_t> SecureElement::rawSignatureToDer(const std::vector<uint8_t>
     return result;
 }
 
-SystemStatus SecureElement::deinit()
+SystemStatus LibtropicSecureElement::deinit()
 {
     if (lt_session_abort(&m_impl->handle) != LT_OK)
     {

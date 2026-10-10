@@ -1,7 +1,7 @@
 # ==== HSM library ====
 add_library(hsm
     src/HsmManager.cpp
-    src/SecureElement.cpp
+    src/LibtropicSecureElement.cpp
 )
 
 target_include_directories(hsm PUBLIC
