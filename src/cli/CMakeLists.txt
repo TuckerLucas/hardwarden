@@ -14,6 +14,11 @@ target_link_libraries(hsmctl
                       PRIVATE audit
                       PRIVATE common)
 
+target_compile_definitions(hsmctl PRIVATE
+    TROPIC_PKCS11_MODULE_PATH="${TROPIC_PKCS11_MODULE}"
+)
+add_dependencies(hsmctl libtropic_pkcs11)
+
 install(TARGETS hsmctl DESTINATION /usr/local/bin)
 
 # ==== Tests ====

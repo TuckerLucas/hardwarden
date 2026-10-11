@@ -1,18 +1,19 @@
 # ==== HSM library ====
 add_library(hsm
     src/HsmManager.cpp
-    src/LibtropicSecureElement.cpp
+    src/Pkcs11Hsm.cpp
 )
 
 target_include_directories(hsm PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${pkcs11_headers_SOURCE_DIR}/published/3-00
 )
 
 target_link_libraries(hsm PRIVATE
-    tropic
     audit
     common
     OpenSSL::Crypto
+    ${CMAKE_DL_LIBS}
 )
 
 # ==== Tests ====
