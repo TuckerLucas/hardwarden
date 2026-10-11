@@ -1,12 +1,13 @@
 #include <sys/stat.h>
 
+#include <cstdlib>
 #include <fstream>
 
 #include "AuditLogger.hpp"
 #include "CliDisplay.hpp"
 #include "CliParser.hpp"
 #include "HsmManager.hpp"
-#include "LibtropicSecureElement.hpp"
+#include "Pkcs11Hsm.hpp"
 
 std::string getDbPath();
 
@@ -42,7 +43,7 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
-    LibtropicSecureElement se;
+    Pkcs11Hsm se(TROPIC_PKCS11_MODULE_PATH);
     AuditLogger logger(getDbPath());
     HsmManager hsm(se, logger);
 

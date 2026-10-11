@@ -1,14 +1,16 @@
 #pragma once
 
-#include <memory>
+#include <optional>
+#include <string>
 
 #include "IHsm.hpp"
+#include "Pkcs11.hpp"
 
-class LibtropicSecureElement : public IHsm
+class Pkcs11Hsm : public IHsm
 {
 public:
-    LibtropicSecureElement();
-    ~LibtropicSecureElement();
+    explicit Pkcs11Hsm(std::string modulePath);
+    ~Pkcs11Hsm() override;
 
     SystemStatus init() override;
     SystemStatus status() override;
@@ -23,14 +25,17 @@ public:
     SystemStatus deinit() override;
 
 private:
-    struct Impl;
-    std::unique_ptr<Impl> m_impl;
+    std::string m_modulePath;
 
-    SystemStatus signEd25519(uint8_t slot, std::vector<uint8_t> payload,
-                             std::vector<uint8_t>& signature);
+    void* m_library = nullptr;            // handle from dlopen
+    CK_FUNCTION_LIST_PTR m_fn = nullptr;  // the module's function table
+    bool m_initialized = false;           // true after C_Initialize
+    CK_SLOT_ID m_slotId = 0;              // the token we talk to
+    CK_SESSION_HANDLE m_session = CK_INVALID_HANDLE;
 
-    SystemStatus signP256(uint8_t slot, std::vector<uint8_t> payload,
-                          std::vector<uint8_t>& signature);
+    CK_RV findObjects(CK_OBJECT_CLASS objectClass, std::optional<uint8_t> slot,
+                      std::vector<CK_OBJECT_HANDLE>& found);
+    CK_RV readPublicKey(CK_OBJECT_HANDLE object, std::vector<uint8_t>& pubKey);
 
     SystemStatus verifyEd25519(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
                                std::vector<uint8_t> signature);

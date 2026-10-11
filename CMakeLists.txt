@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 include(FetchContent)
+include(ExternalProject)
 
 # ==== SQLite3 ====
 find_package(SQLite3 REQUIRED)
@@ -19,37 +20,16 @@ FetchContent_Declare(
     GIT_TAG v3.7.1
 )
 
-# ==== libtropic ====
+# ==== PKCS#11 headers (official OASIS v3.0) ====
 FetchContent_Declare(
-    libtropic
-    GIT_REPOSITORY https://github.com/tropicsquare/libtropic.git
-    GIT_TAG v4.0.0
+    pkcs11_headers
+    GIT_REPOSITORY https://github.com/oasis-tcs/pkcs11.git
+    GIT_TAG bcc6fac8759e68f4b0a18adfbf5b169809e29e03
 )
 
-# ==== mbedTLS (required by libtropic) ====
-set(ENABLE_TESTING OFF CACHE BOOL "")
-set(ENABLE_PROGRAMS OFF CACHE BOOL "")
-FetchContent_Declare(
-    mbedtls_v4
-    URL https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-4.0.0/mbedtls-4.0.0.tar.bz2
-    URL_HASH SHA256=2f3a47f7b3a541ddef450e4867eeecb7ce2ef7776093f3a11d6d43ead6bf2827
-)
+FetchContent_MakeAvailable(Catch2 pkcs11_headers)
 
-FetchContent_MakeAvailable(Catch2 libtropic mbedtls_v4)
-
-# ==== Wire mbedTLS into libtropic ====
-target_link_libraries(tropic PUBLIC mbedtls)
-
-# ==== Add CAL and HAL ====
-add_subdirectory(${libtropic_SOURCE_DIR}/cal/mbedtls_v4 "mbedtls_v4_cal")
-target_sources(tropic PRIVATE ${LT_CAL_SRCS})
-target_include_directories(tropic PUBLIC ${LT_CAL_INC_DIRS})
-
-add_subdirectory(${libtropic_SOURCE_DIR}/hal/linux/spi "linux_spi_hal")
-target_sources(tropic PRIVATE ${LT_HAL_SRCS})
-target_include_directories(tropic PUBLIC ${LT_HAL_INC_DIRS})
-
-# ==== SPI/GPIO device paths ====
+# ==== SPI/GPIO device paths for TROPIC01 ====
 if(NOT DEFINED LT_SPI_DEV_PATH)
     set(LT_SPI_DEV_PATH "/dev/spidev0.0")
 endif()
@@ -57,15 +37,22 @@ if(NOT DEFINED LT_GPIO_DEV_PATH)
     set(LT_GPIO_DEV_PATH "/dev/gpiochip0")
 endif()
 
-# ==== SH0 pairing keys ====
-set(LT_SH0_KEYS "prod0" CACHE STRING "")
-set(LT_USE_SH0_ENG_SAMPLE 0 CACHE INTERNAL "")
-set(LT_USE_SH0_PROD0 0 CACHE INTERNAL "")
-if(LT_SH0_KEYS STREQUAL "eng_sample")
-    set(LT_USE_SH0_ENG_SAMPLE 1)
-elseif(LT_SH0_KEYS STREQUAL "prod0")
-    set(LT_USE_SH0_PROD0 1)
-endif()
+# ==== TROPIC01 PKCS#11 module ====
+# Built separately: it brings its own libtropic. hsmctl loads it at runtime.
+ExternalProject_Add(libtropic_pkcs11
+    GIT_REPOSITORY https://github.com/tropicsquare/libtropic-pkcs11.git
+    GIT_TAG 604cb444c1deea6a73c4300b36f468083586c6bc
+    CMAKE_ARGS
+        -DCMAKE_BUILD_TYPE=Release
+        -DLT_HAL=linux_spi
+        -DLT_SPI_DEV_PATH=${LT_SPI_DEV_PATH}
+        -DLT_GPIO_DEV_PATH=${LT_GPIO_DEV_PATH}
+        -DLT_SPI_CS_PIN=25
+    INSTALL_COMMAND ""
+    BUILD_BYPRODUCTS <BINARY_DIR>/libtropic_pkcs11.so
+)
+ExternalProject_Get_Property(libtropic_pkcs11 BINARY_DIR)
+set(TROPIC_PKCS11_MODULE "${BINARY_DIR}/libtropic_pkcs11.so")
 
 # ==== CTest ====
 include(CTest)
