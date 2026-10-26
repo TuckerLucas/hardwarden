@@ -61,6 +61,12 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::LOGS;
 
+        if (command.device != Device::NONE)
+        {
+            command.error = ParseError::UNEXPECTED_DEVICE;
+            return command;
+        }
+
         if (argc == 3 && std::string(argv[2]) == "--help")
         {
             command.requires_help = true;

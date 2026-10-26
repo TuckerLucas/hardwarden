@@ -118,6 +118,7 @@ TEST_CASE("CliParser parseCommand")
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
+            REQUIRE(parsed_command.device == Device::NONE);
             REQUIRE(parsed_command.operation == Operation::LOGS);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.requires_help == false);
@@ -132,6 +133,16 @@ TEST_CASE("CliParser parseCommand")
             REQUIRE(parsed_command.operation == Operation::LOGS);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.requires_help == true);
+        }
+
+        SECTION("unexpected device")
+        {
+            const char* argv[] = {"hsmctl", "tropic01", "logs"};
+
+            auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+            REQUIRE(parsed_command.operation == Operation::LOGS);
+            REQUIRE(parsed_command.error == ParseError::UNEXPECTED_DEVICE);
         }
 
         SECTION("invalid option")
