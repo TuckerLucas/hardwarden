@@ -151,10 +151,11 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("non-boundary slot")
             {
-                const char* argv[] = {"hsmctl", "erase-key", "--slot", "2"};
+                const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--slot", "2"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
+                REQUIRE(parsed_command.device == Device::TROPIC01);
                 REQUIRE(parsed_command.operation == Operation::ERASE_KEY);
                 REQUIRE(parsed_command.options["slot"] == "2");
                 REQUIRE(parsed_command.error == ParseError::NONE);
@@ -166,7 +167,8 @@ TEST_CASE("CliParser parseCommand")
                 SECTION("lower boundary")
                 {
                     std::string min_slot_str = std::to_string(MIN_SLOT);
-                    const char* argv[] = {"hsmctl", "erase-key", "--slot", min_slot_str.c_str()};
+                    const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--slot",
+                                          min_slot_str.c_str()};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -179,7 +181,8 @@ TEST_CASE("CliParser parseCommand")
                 SECTION("upper boundary")
                 {
                     std::string max_slot_str = std::to_string(MAX_SLOT);
-                    const char* argv[] = {"hsmctl", "erase-key", "--slot", max_slot_str.c_str()};
+                    const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--slot",
+                                          max_slot_str.c_str()};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -193,7 +196,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("help")
         {
-            const char* argv[] = {"hsmctl", "erase-key", "--help"};
+            const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -202,9 +205,19 @@ TEST_CASE("CliParser parseCommand")
             REQUIRE(parsed_command.requires_help);
         }
 
+        SECTION("missing device")
+        {
+            const char* argv[] = {"hsmctl", "erase-key", "--slot", "2"};
+
+            auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+            REQUIRE(parsed_command.operation == Operation::ERASE_KEY);
+            REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
+        }
+
         SECTION("missing option")
         {
-            const char* argv[] = {"hsmctl", "erase-key"};
+            const char* argv[] = {"hsmctl", "tropic01", "erase-key"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -216,7 +229,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unknown option")
             {
-                const char* argv[] = {"hsmctl", "erase-key", "--invalid-option"};
+                const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--invalid-option"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -225,7 +238,7 @@ TEST_CASE("CliParser parseCommand")
             }
             SECTION("trailing garbage after valid command")
             {
-                const char* argv[] = {"hsmctl", "erase-key", "--slot", "0", "garbage"};
+                const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--slot", "0", "garbage"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -235,7 +248,8 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("duplicated slot")
             {
-                const char* argv[] = {"hsmctl", "erase-key", "--slot", "3", "--slot", "14"};
+                const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--slot",
+                                      "3",      "--slot",   "14"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -246,7 +260,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("missing slot value")
         {
-            const char* argv[] = {"hsmctl", "erase-key", "--slot"};
+            const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--slot"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -258,7 +272,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("not a number")
             {
-                const char* argv[] = {"hsmctl", "erase-key", "--slot", "NaN"};
+                const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--slot", "NaN"};
 
                 auto result = parser.parseCommand(std::size(argv), argv);
 
@@ -268,7 +282,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("out of boundaries")
             {
-                const char* argv[] = {"hsmctl", "erase-key", "--slot", "32"};
+                const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--slot", "32"};
 
                 auto result = parser.parseCommand(std::size(argv), argv);
 
