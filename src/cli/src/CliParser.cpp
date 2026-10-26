@@ -693,6 +693,12 @@ Command CliParser::parseCommand(int argc, const char* argv[])
             (!data_option_used && !file_option_used) || !signature_option_used)
         {
             command.error = ParseError::MISSING_OPTION;
+            return command;
+        }
+
+        if (slot_option_used && command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
         }
 
         return command;

@@ -1383,11 +1383,13 @@ TEST_CASE("verify")
     {
         SECTION("slot and data specified")
         {
-            const char* argv[] = {"hsmctl", "verify", "--slot",      "25",
-                                  "--data", "data",   "--signature", valid_signature.c_str()};
+            const char* argv[] = {"hsmctl", "tropic01",    "verify",
+                                  "--slot", "25",          "--data",
+                                  "data",   "--signature", valid_signature.c_str()};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
+            REQUIRE(parsed_command.device == Device::TROPIC01);
             REQUIRE(parsed_command.operation == Operation::VERIFY);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.options["slot"] == "25");
@@ -1400,8 +1402,9 @@ TEST_CASE("verify")
 
         SECTION("slot and file specified")
         {
-            const char* argv[] = {"hsmctl", "verify",   "--slot",      "25",
-                                  "--file", "file.txt", "--signature", valid_signature.c_str()};
+            const char* argv[] = {"hsmctl",   "tropic01",    "verify",
+                                  "--slot",   "25",          "--file",
+                                  "file.txt", "--signature", valid_signature.c_str()};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1475,8 +1478,9 @@ TEST_CASE("verify")
 
             SECTION("data | slot | signature")
             {
-                const char* argv[] = {"hsmctl", "verify", "--data",      "data",
-                                      "--slot", "25",     "--signature", valid_signature.c_str()};
+                const char* argv[] = {"hsmctl", "tropic01",    "verify",
+                                      "--data", "data",        "--slot",
+                                      "25",     "--signature", valid_signature.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1492,9 +1496,15 @@ TEST_CASE("verify")
 
             SECTION("slot | signature | file")
             {
-                const char* argv[] = {"hsmctl", "verify",      "--slot",
-                                      "25",     "--signature", valid_signature.c_str(),
-                                      "--file", "file.txt"};
+                const char* argv[] = {"hsmctl",
+                                      "tropic01",
+                                      "verify",
+                                      "--slot",
+                                      "25",
+                                      "--signature",
+                                      valid_signature.c_str(),
+                                      "--file",
+                                      "file.txt"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1535,6 +1545,17 @@ TEST_CASE("verify")
         }
     }
 
+    SECTION("slot without device")
+    {
+        const char* argv[] = {"hsmctl", "verify", "--slot",      "25",
+                              "--data", "data",   "--signature", valid_signature.c_str()};
+
+        auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+        REQUIRE(parsed_command.operation == Operation::VERIFY);
+        REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
+    }
+
     SECTION("invalid option")
     {
         SECTION("unknown option")
@@ -1551,7 +1572,7 @@ TEST_CASE("verify")
         {
             SECTION("slot")
             {
-                const char* argv[] = {"hsmctl", "verify", "--slot", "3", "--slot", "4"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--slot", "3", "--slot", "4"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1662,6 +1683,7 @@ TEST_CASE("verify")
         SECTION("unexpected argument after valid command")
         {
             const char* argv[] = {"hsmctl",
+                                  "tropic01",
                                   "verify",
                                   "--slot",
                                   "12",
@@ -1719,8 +1741,13 @@ TEST_CASE("verify")
         {
             SECTION("slot specified")
             {
-                const char* argv[] = {"hsmctl", "verify",      "--slot",
-                                      "18",     "--signature", valid_signature.c_str()};
+                const char* argv[] = {"hsmctl",
+                                      "tropic01",
+                                      "verify",
+                                      "--slot",
+                                      "18",
+                                      "--signature",
+                                      valid_signature.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1745,7 +1772,8 @@ TEST_CASE("verify")
         {
             SECTION("slot and data specified")
             {
-                const char* argv[] = {"hsmctl", "verify", "--slot", "15", "--data", "data"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--slot",
+                                      "15",     "--data",   "data"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1755,7 +1783,8 @@ TEST_CASE("verify")
 
             SECTION("slot and file specified")
             {
-                const char* argv[] = {"hsmctl", "verify", "--slot", "15", "--file", "file.txt"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify",  "--slot",
+                                      "15",     "--file",   "file.txt"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1794,7 +1823,7 @@ TEST_CASE("verify")
         {
             SECTION("other options not specified")
             {
-                const char* argv[] = {"hsmctl", "verify", "--slot"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--slot"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1804,7 +1833,7 @@ TEST_CASE("verify")
 
             SECTION("other options specified")
             {
-                const char* argv[] = {"hsmctl", "verify", "--slot", "--data", "data"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--slot", "--data", "data"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1874,7 +1903,7 @@ TEST_CASE("verify")
 
             SECTION("other options specified")
             {
-                const char* argv[] = {"hsmctl", "verify", "--file", "--slot", "5"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--file", "--slot", "5"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1913,7 +1942,7 @@ TEST_CASE("verify")
         {
             SECTION("not a number")
             {
-                const char* argv[] = {"hsmctl", "verify", "--slot", "NaN"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--slot", "NaN"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1924,7 +1953,7 @@ TEST_CASE("verify")
 
             SECTION("out of boundaries")
             {
-                const char* argv[] = {"hsmctl", "verify", "--slot", "32"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--slot", "32"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
