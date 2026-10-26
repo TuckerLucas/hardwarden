@@ -19,14 +19,57 @@ TEST_CASE("CliParser parseCommand")
         REQUIRE(parsed_command.error == ParseError::MISSING_OPERATION);
     }
 
+    SECTION("device without operation")
+    {
+        const char* argv[] = {"hsmctl", "tropic01"};
+
+        auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+        REQUIRE(parsed_command.device == Device::TROPIC01);
+        REQUIRE(parsed_command.operation == Operation::NONE);
+        REQUIRE(parsed_command.error == ParseError::MISSING_OPERATION);
+    }
+
+    SECTION("device help")
+    {
+        const char* argv[] = {"hsmctl", "tropic01", "--help"};
+
+        auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+        REQUIRE(parsed_command.device == Device::TROPIC01);
+        REQUIRE(parsed_command.operation == Operation::HELP);
+        REQUIRE(parsed_command.error == ParseError::NONE);
+    }
+
+    SECTION("unknown device")
+    {
+        const char* argv[] = {"hsmctl", "tropic1", "status"};
+
+        auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+        REQUIRE(parsed_command.device == Device::NONE);
+        REQUIRE(parsed_command.error == ParseError::INVALID_OPERATION);
+    }
+
+    SECTION("device with invalid operation")
+    {
+        const char* argv[] = {"hsmctl", "tropic01", "invalid-operation"};
+
+        auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+        REQUIRE(parsed_command.device == Device::TROPIC01);
+        REQUIRE(parsed_command.operation == Operation::NONE);
+        REQUIRE(parsed_command.error == ParseError::INVALID_OPERATION);
+    }
+
     SECTION("invalid operation")
     {
         const char* argv[] = {"hsmctl", "invalid-operation"};
 
-        auto result = parser.parseCommand(std::size(argv), argv);
+        auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-        REQUIRE(result.operation == Operation::NONE);
-        REQUIRE(result.error == ParseError::INVALID_OPERATION);
+        REQUIRE(parsed_command.operation == Operation::NONE);
+        REQUIRE(parsed_command.error == ParseError::INVALID_OPERATION);
     }
 
     SECTION("help")
@@ -285,20 +328,20 @@ TEST_CASE("CliParser parseCommand")
             {
                 const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--slot", "NaN"};
 
-                auto result = parser.parseCommand(std::size(argv), argv);
+                auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(result.operation == Operation::ERASE_KEY);
-                REQUIRE(result.error == ParseError::INVALID_VALUE);
+                REQUIRE(parsed_command.operation == Operation::ERASE_KEY);
+                REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
             }
 
             SECTION("out of boundaries")
             {
                 const char* argv[] = {"hsmctl", "tropic01", "erase-key", "--slot", "32"};
 
-                auto result = parser.parseCommand(std::size(argv), argv);
+                auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(result.operation == Operation::ERASE_KEY);
-                REQUIRE(result.error == ParseError::INVALID_VALUE);
+                REQUIRE(parsed_command.operation == Operation::ERASE_KEY);
+                REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
             }
         }
     }
@@ -562,20 +605,20 @@ TEST_CASE("CliParser parseCommand")
                 {
                     const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot", "NaN"};
 
-                    auto result = parser.parseCommand(std::size(argv), argv);
+                    auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                    REQUIRE(result.operation == Operation::GENERATE_KEY);
-                    REQUIRE(result.error == ParseError::INVALID_VALUE);
+                    REQUIRE(parsed_command.operation == Operation::GENERATE_KEY);
+                    REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
                 }
 
                 SECTION("out of boundaries")
                 {
                     const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot", "32"};
 
-                    auto result = parser.parseCommand(std::size(argv), argv);
+                    auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                    REQUIRE(result.operation == Operation::GENERATE_KEY);
-                    REQUIRE(result.error == ParseError::INVALID_VALUE);
+                    REQUIRE(parsed_command.operation == Operation::GENERATE_KEY);
+                    REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
                 }
             }
 
@@ -584,10 +627,10 @@ TEST_CASE("CliParser parseCommand")
                 const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot",
                                       "27",     "--curve",  "invalid_curve"};
 
-                auto result = parser.parseCommand(std::size(argv), argv);
+                auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(result.operation == Operation::GENERATE_KEY);
-                REQUIRE(result.error == ParseError::INVALID_VALUE);
+                REQUIRE(parsed_command.operation == Operation::GENERATE_KEY);
+                REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
             }
         }
     }
@@ -722,20 +765,20 @@ TEST_CASE("CliParser parseCommand")
             {
                 const char* argv[] = {"hsmctl", "tropic01", "read-key", "--slot", "NaN"};
 
-                auto result = parser.parseCommand(std::size(argv), argv);
+                auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(result.operation == Operation::READ_KEY);
-                REQUIRE(result.error == ParseError::INVALID_VALUE);
+                REQUIRE(parsed_command.operation == Operation::READ_KEY);
+                REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
             }
 
             SECTION("out of boundaries")
             {
                 const char* argv[] = {"hsmctl", "tropic01", "read-key", "--slot", "32"};
 
-                auto result = parser.parseCommand(std::size(argv), argv);
+                auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(result.operation == Operation::READ_KEY);
-                REQUIRE(result.error == ParseError::INVALID_VALUE);
+                REQUIRE(parsed_command.operation == Operation::READ_KEY);
+                REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
             }
         }
     }
