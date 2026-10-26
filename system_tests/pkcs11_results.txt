@@ -1,8 +1,0 @@
-[93m==================================================[0m
-[93mWARNING: System tests will erase ALL keys from[0m
-[93mthe HSM before running.[0m
-
-[93mDo NOT run on a production device.[0m
-[93m==================================================[0m
-
-Continue? (yes/no): 

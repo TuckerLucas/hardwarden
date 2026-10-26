@@ -56,18 +56,30 @@ TEST_CASE("CliParser parseCommand")
     {
         SECTION("success")
         {
-            const char* argv[] = {"hsmctl", "status"};
+            const char* argv[] = {"hsmctl", "tropic01", "status"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
+            REQUIRE(parsed_command.device == Device::TROPIC01);
             REQUIRE(parsed_command.operation == Operation::STATUS);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.requires_help == false);
         }
 
+        SECTION("missing device")
+        {
+            const char* argv[] = {"hsmctl", "status"};
+
+            auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+            REQUIRE(parsed_command.device == Device::NONE);
+            REQUIRE(parsed_command.operation == Operation::STATUS);
+            REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
+        }
+
         SECTION("help")
         {
-            const char* argv[] = {"hsmctl", "status", "--help"};
+            const char* argv[] = {"hsmctl", "tropic01", "status", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -76,9 +88,20 @@ TEST_CASE("CliParser parseCommand")
             REQUIRE(parsed_command.requires_help == true);
         }
 
+        SECTION("help without device")
+        {
+            const char* argv[] = {"hsmctl", "status", "--help"};
+
+            auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+            REQUIRE(parsed_command.operation == Operation::STATUS);
+            REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
+            REQUIRE(parsed_command.requires_help == false);
+        }
+
         SECTION("invalid option")
         {
-            const char* argv[] = {"hsmctl", "status", "--some-option"};
+            const char* argv[] = {"hsmctl", "tropic01", "status", "--some-option"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 

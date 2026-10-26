@@ -6,6 +6,13 @@ Command CliParser::parseCommand(int argc, const char* argv[])
 {
     Command command;
 
+    if (argc >= 2 && std::string(argv[1]) == "tropic01")
+    {
+        command.device = Device::TROPIC01;
+        argc--;
+        argv++;
+    }
+
     if (argc < 2)
     {
         command.error = ParseError::MISSING_OPERATION;
@@ -29,6 +36,12 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     if (operation == "status")
     {
         command.operation = Operation::STATUS;
+
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
 
         if (argc == 3 && std::string(argv[2]) == "--help")
         {
