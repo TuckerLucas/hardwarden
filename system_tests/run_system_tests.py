@@ -112,7 +112,7 @@ print("="*50 + "\n")
 
 print("Preparing HSM...")
 for slot in range(32):
-    run_command([BINARY, "erase-key", "--slot", str(slot)])
+    run_command([BINARY, "tropic01", "erase-key", "--slot", str(slot)])
 print("Ready.\n")
 
 # TODO: Setting up and cleaning up should only be done once
@@ -127,188 +127,188 @@ print("Ready.\n")
 run_test("help menu", [BINARY, "--help"])
 
 # Status
-run_test("status - help", [BINARY, "status", "--help"])
-run_test("status", [BINARY, "status"])
+run_test("status - help", [BINARY, "tropic01", "status", "--help"])
+run_test("status", [BINARY, "tropic01", "status"])
 
 # Logs
 run_test("logs - help", [BINARY, "logs", "--help"])
 run_test("logs", [BINARY, "logs"])
 
 # Erase key
-run_test("erase key - help", [BINARY, "erase-key", "--help"])
-run_test("erase key", [BINARY, "erase-key", "--slot", "1"])
+run_test("erase key - help", [BINARY, "tropic01", "erase-key", "--help"])
+run_test("erase key", [BINARY, "tropic01", "erase-key", "--slot", "1"])
 
 # Generate key
-run_test("generate key - help", [BINARY, "generate-key", "--help"])
+run_test("generate key - help", [BINARY, "tropic01", "generate-key", "--help"])
 
 run_test("generate key - unspecified curve",
-         [BINARY, "generate-key", "--slot", "1"],
-         cleanup=[BINARY, "erase-key", "--slot", "1"])
+         [BINARY, "tropic01", "generate-key", "--slot", "1"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "1"])
 
 run_test("generate key - Ed25519 curve",
-         [BINARY, "generate-key", "--slot", "2", "--curve", "ed25519"],
-         cleanup=[BINARY, "erase-key", "--slot", "2"])
+         [BINARY, "tropic01", "generate-key", "--slot", "2", "--curve", "ed25519"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"])
 
 run_test("generate key - NIST P-256 curve",
-         [BINARY, "generate-key", "--slot", "3", "--curve", "p256"],
-         cleanup=[BINARY, "erase-key", "--slot", "3"])
+         [BINARY, "tropic01", "generate-key", "--slot", "3", "--curve", "p256"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "3"])
 
 run_test("generate key - curve specified first",
-         [BINARY, "generate-key", "--curve", "p256", "--slot", "3"],
-         cleanup=[BINARY, "erase-key", "--slot", "3"])   
+         [BINARY, "tropic01", "generate-key", "--curve", "p256", "--slot", "3"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "3"])   
 
 run_test("generate key - occupied slot",
-         [BINARY, "generate-key", "--slot", "10"],
-         setup=[BINARY, "generate-key", "--slot", "10"],
-         cleanup=[BINARY, "erase-key", "--slot", "10"],
+         [BINARY, "tropic01", "generate-key", "--slot", "10"],
+         setup=[BINARY, "tropic01", "generate-key", "--slot", "10"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "10"],
          expected_exit_code=1)
 
 # Read key
-run_test("read key - help", [BINARY, "read-key", "--help"])
+run_test("read key - help", [BINARY, "tropic01", "read-key", "--help"])
 
 run_test("read key - Ed25519",
-         [BINARY, "read-key", "--slot", "17"],
-         setup=[BINARY, "generate-key", "--slot", "17"],
-         cleanup=[BINARY, "erase-key", "--slot", "17"])
+         [BINARY, "tropic01", "read-key", "--slot", "17"],
+         setup=[BINARY, "tropic01", "generate-key", "--slot", "17"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "17"])
 
 run_test("read key - NIST P-256",
-         [BINARY, "read-key", "--slot", "25"],
-         setup=[BINARY, "generate-key", "--slot", "25", "--curve", "p256"],
-         cleanup=[BINARY, "erase-key", "--slot", "25"])
+         [BINARY, "tropic01", "read-key", "--slot", "25"],
+         setup=[BINARY, "tropic01", "generate-key", "--slot", "25", "--curve", "p256"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "25"])
 
 run_test("read key - empty slot",
-         [BINARY, "read-key", "--slot", "10"],
+         [BINARY, "tropic01", "read-key", "--slot", "10"],
          expected_exit_code=1)
 
 # List all keys
-run_test("list all keys - help", [BINARY, "list-keys", "--help"])
+run_test("list all keys - help", [BINARY, "tropic01", "list-keys", "--help"])
 
-run_test("list all keys - no keys", [BINARY, "list-keys"])
+run_test("list all keys - no keys", [BINARY, "tropic01", "list-keys"])
 
 run_test("list all keys - one key",
-         [BINARY, "list-keys"],
-         setup=[BINARY, "generate-key", "--slot", "5"],
-         cleanup=[BINARY, "erase-key", "--slot", "5"])
+         [BINARY, "tropic01", "list-keys"],
+         setup=[BINARY, "tropic01", "generate-key", "--slot", "5"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "5"])
 
 run_test("list all keys - multiple keys",
-         [BINARY, "list-keys"],
+         [BINARY, "tropic01", "list-keys"],
          setup=[
-             [BINARY, "generate-key", "--slot", "5"],
-             [BINARY, "generate-key", "--slot", "6"],
-             [BINARY, "generate-key", "--slot", "7"],
+             [BINARY, "tropic01", "generate-key", "--slot", "5"],
+             [BINARY, "tropic01", "generate-key", "--slot", "6"],
+             [BINARY, "tropic01", "generate-key", "--slot", "7"],
          ],
          cleanup=[
-             [BINARY, "erase-key", "--slot", "5"],
-             [BINARY, "erase-key", "--slot", "6"],
-             [BINARY, "erase-key", "--slot", "7"],
+             [BINARY, "tropic01", "erase-key", "--slot", "5"],
+             [BINARY, "tropic01", "erase-key", "--slot", "6"],
+             [BINARY, "tropic01", "erase-key", "--slot", "7"],
          ])
 
 run_test("list all keys - verbose",
-         [BINARY, "list-keys", "--verbose"],
+         [BINARY, "tropic01", "list-keys", "--verbose"],
                   setup=[
-             [BINARY, "generate-key", "--slot", "6"],
-             [BINARY, "generate-key", "--slot", "7"],
+             [BINARY, "tropic01", "generate-key", "--slot", "6"],
+             [BINARY, "tropic01", "generate-key", "--slot", "7"],
          ],
          cleanup=[
-             [BINARY, "erase-key", "--slot", "6"],
-             [BINARY, "erase-key", "--slot", "7"],
+             [BINARY, "tropic01", "erase-key", "--slot", "6"],
+             [BINARY, "tropic01", "erase-key", "--slot", "7"],
          ])
 
 # Sign
-run_test("sign - help", [BINARY, "sign", "--help"])
+run_test("sign - help", [BINARY, "tropic01", "sign", "--help"])
 
 run_test("sign - data (Ed25519)",
-         [BINARY, "sign", "--slot", "18", "--data", "hello"],
-         setup=[BINARY, "generate-key", "--slot", "18"],
-         cleanup=[BINARY, "erase-key", "--slot", "18"])
+         [BINARY, "tropic01", "sign", "--slot", "18", "--data", "hello"],
+         setup=[BINARY, "tropic01", "generate-key", "--slot", "18"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "18"])
 
 run_test("sign - data (P-256)",
-         [BINARY, "sign", "--slot", "18", "--data", "hello"],
-         setup=[BINARY, "generate-key", "--slot", "18", "--curve", "p256"],
-         cleanup=[BINARY, "erase-key", "--slot", "18"])
+         [BINARY, "tropic01", "sign", "--slot", "18", "--data", "hello"],
+         setup=[BINARY, "tropic01", "generate-key", "--slot", "18", "--curve", "p256"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "18"])
 
 run_test("sign - file (Ed25519)",
-         [BINARY, "sign", "--slot", "19", "--file", "test_file.txt"],
-         setup=[BINARY, "generate-key", "--slot", "19"],
-         cleanup=[BINARY, "erase-key", "--slot", "19"])
+         [BINARY, "tropic01", "sign", "--slot", "19", "--file", "test_file.txt"],
+         setup=[BINARY, "tropic01", "generate-key", "--slot", "19"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "19"])
 
 run_test("sign - file (P-256)",
-         [BINARY, "sign", "--slot", "19", "--file", "test_file.txt"],
-         setup=[BINARY, "generate-key", "--slot", "19", "--curve", "p256"],
-         cleanup=[BINARY, "erase-key", "--slot", "19"]) 
+         [BINARY, "tropic01", "sign", "--slot", "19", "--file", "test_file.txt"],
+         setup=[BINARY, "tropic01", "generate-key", "--slot", "19", "--curve", "p256"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "19"]) 
 
 run_test("sign - large file (P-256)",
-         [BINARY, "sign", "--slot", "19", "--file", "large_test_file.txt"],
-         setup=[BINARY, "generate-key", "--slot", "19", "--curve", "p256"],
-         cleanup=[BINARY, "erase-key", "--slot", "19"])      
+         [BINARY, "tropic01", "sign", "--slot", "19", "--file", "large_test_file.txt"],
+         setup=[BINARY, "tropic01", "generate-key", "--slot", "19", "--curve", "p256"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "19"])      
 
 run_test("sign - file not found",
-         [BINARY, "sign", "--slot", "23", "--file", "nonexistent.txt"],
-         setup=[BINARY, "generate-key", "--slot", "23"],
-         cleanup=[BINARY, "erase-key", "--slot", "23"],
+         [BINARY, "tropic01", "sign", "--slot", "23", "--file", "nonexistent.txt"],
+         setup=[BINARY, "tropic01", "generate-key", "--slot", "23"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "23"],
          expected_exit_code=1)
 
 run_test("sign - key not found (data)",
-         [BINARY, "sign", "--slot", "23", "--data", "hello"],
+         [BINARY, "tropic01", "sign", "--slot", "23", "--data", "hello"],
          expected_exit_code=1)
 
 run_test("sign - key not found (file)",
-         [BINARY, "sign", "--slot", "23", "--file", "test_file.txt"],
+         [BINARY, "tropic01", "sign", "--slot", "23", "--file", "test_file.txt"],
          expected_exit_code=1) 
 
 # Verify
 run_test("verify - help", [BINARY, "verify", "--help"])  
 
 run_test("verify - Ed25519 - HSM key - valid data",
-         lambda sig: [BINARY, "verify", "--slot", "0", "--data", ED25519_VALID_DATA, "--signature", sig],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "0", "--data", ED25519_VALID_DATA, "--signature", sig],
          setup=[
-             [BINARY, "generate-key", "--slot", "0"],
-             make_get_signature([BINARY, "sign", "--slot", "0", "--data", ED25519_VALID_DATA])
+             [BINARY, "tropic01", "generate-key", "--slot", "0"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "0", "--data", ED25519_VALID_DATA])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "0"])
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "0"])
 
 run_test("verify - Ed25519 - HSM key - valid file",
-         lambda sig: [BINARY, "verify", "--slot", "0", "--file", "test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "0", "--file", "test_file.txt", "--signature", sig],
          setup=[
-             [BINARY, "generate-key", "--slot", "0"],
-             make_get_signature([BINARY, "sign", "--slot", "0", "--file", "test_file.txt"])
+             [BINARY, "tropic01", "generate-key", "--slot", "0"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "0", "--file", "test_file.txt"])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "0"])     
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "0"])     
 
 run_test("verify - Ed25519 - HSM key - invalid data",
-         lambda sig: [BINARY, "verify", "--slot", "2", "--data", "wrong_data", "--signature", sig],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--data", "wrong_data", "--signature", sig],
          setup=[
-             [BINARY, "generate-key", "--slot", "2"],
-             make_get_signature([BINARY, "sign", "--slot", "2", "--data", ED25519_VALID_DATA])
+             [BINARY, "tropic01", "generate-key", "--slot", "2"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "2", "--data", ED25519_VALID_DATA])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "2"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
 run_test("verify - Ed25519 - HSM key - invalid file",
-         lambda sig: [BINARY, "verify", "--slot", "2", "--file", "large_test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--file", "large_test_file.txt", "--signature", sig],
          setup=[
-             [BINARY, "generate-key", "--slot", "2"],
-             make_get_signature([BINARY, "sign", "--slot", "2", "--file", "test_file.txt"])
+             [BINARY, "tropic01", "generate-key", "--slot", "2"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "2", "--file", "test_file.txt"])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "2"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
 run_test("verify - Ed25519 - HSM key - invalid signature + valid data",
-         lambda sig: [BINARY, "verify", "--slot", "2", "--data", ED25519_VALID_DATA, "--signature", INVALID_SIGNATURE],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--data", ED25519_VALID_DATA, "--signature", INVALID_SIGNATURE],
          setup=[
-             [BINARY, "generate-key", "--slot", "2"],
-             make_get_signature([BINARY, "sign", "--slot", "2", "--data", ED25519_VALID_DATA])
+             [BINARY, "tropic01", "generate-key", "--slot", "2"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "2", "--data", ED25519_VALID_DATA])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "2"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
 run_test("verify - Ed25519 - HSM key - invalid signature + valid file",
-         lambda sig: [BINARY, "verify", "--slot", "2", "--file", "test_file.txt", "--signature", INVALID_SIGNATURE],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--file", "test_file.txt", "--signature", INVALID_SIGNATURE],
          setup=[
-             [BINARY, "generate-key", "--slot", "2"],
-             make_get_signature([BINARY, "sign", "--slot", "2", "--file", "test_file.txt"])
+             [BINARY, "tropic01", "generate-key", "--slot", "2"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "2", "--file", "test_file.txt"])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "2"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
 run_test("verify - Ed25519 - user provided key - valid data",
@@ -338,55 +338,55 @@ run_test("verify - Ed25519 - user provided key - invalid signature + valid file"
          expected_exit_code=1)
 
 run_test("verify - P-256 - HSM key - valid data",
-         lambda sig: [BINARY, "verify", "--slot", "1", "--data", P256_VALID_DATA, "--signature", sig],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "1", "--data", P256_VALID_DATA, "--signature", sig],
          setup=[
-             [BINARY, "generate-key", "--slot", "1", "--curve", "p256"],
-             make_get_signature([BINARY, "sign", "--slot", "1", "--data", P256_VALID_DATA])
+             [BINARY, "tropic01", "generate-key", "--slot", "1", "--curve", "p256"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "1", "--data", P256_VALID_DATA])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "1"])
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "1"])
 
 run_test("verify - P-256 - HSM key - valid file",
-         lambda sig: [BINARY, "verify", "--slot", "1", "--file", "large_test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "1", "--file", "large_test_file.txt", "--signature", sig],
          setup=[
-             [BINARY, "generate-key", "--slot", "1", "--curve", "p256"],
-             make_get_signature([BINARY, "sign", "--slot", "1", "--file", "large_test_file.txt"])
+             [BINARY, "tropic01", "generate-key", "--slot", "1", "--curve", "p256"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "1", "--file", "large_test_file.txt"])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "1"])
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "1"])
 
 run_test("verify - P-256 - HSM key - invalid data",
-         lambda sig: [BINARY, "verify", "--slot", "3", "--data", "wrong_data", "--signature", sig],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "3", "--data", "wrong_data", "--signature", sig],
          setup=[
-             [BINARY, "generate-key", "--slot", "3", "--curve", "p256"],
-             make_get_signature([BINARY, "sign", "--slot", "3", "--data", P256_VALID_DATA])
+             [BINARY, "tropic01", "generate-key", "--slot", "3", "--curve", "p256"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "3", "--data", P256_VALID_DATA])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "3"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "3"],
          expected_exit_code=1)
 
 run_test("verify - P-256 - HSM key - invalid file",
-         lambda sig: [BINARY, "verify", "--slot", "3", "--file", "test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "3", "--file", "test_file.txt", "--signature", sig],
          setup=[
-             [BINARY, "generate-key", "--slot", "3", "--curve", "p256"],
-             make_get_signature([BINARY, "sign", "--slot", "3", "--file", "large_test_file.txt"])
+             [BINARY, "tropic01", "generate-key", "--slot", "3", "--curve", "p256"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "3", "--file", "large_test_file.txt"])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "3"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "3"],
          expected_exit_code=1)
 
 run_test("verify - P-256 - HSM key - invalid signature + valid data",
-         lambda sig: [BINARY, "verify", "--slot", "2", "--data", P256_VALID_DATA, "--signature", INVALID_SIGNATURE],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--data", P256_VALID_DATA, "--signature", INVALID_SIGNATURE],
          setup=[
-             [BINARY, "generate-key", "--slot", "2", "--curve", "p256"],
-             make_get_signature([BINARY, "sign", "--slot", "2", "--data", P256_VALID_DATA])
+             [BINARY, "tropic01", "generate-key", "--slot", "2", "--curve", "p256"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "2", "--data", P256_VALID_DATA])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "2"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
 run_test("verify - P-256 - HSM key - invalid signature + valid file",
-         lambda sig: [BINARY, "verify", "--slot", "2", "--file", "large_test_file.txt", "--signature", INVALID_SIGNATURE],
+         lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--file", "large_test_file.txt", "--signature", INVALID_SIGNATURE],
          setup=[
-             [BINARY, "generate-key", "--slot", "2", "--curve", "p256"],
-             make_get_signature([BINARY, "sign", "--slot", "2", "--file", "large_test_file.txt"])
+             [BINARY, "tropic01", "generate-key", "--slot", "2", "--curve", "p256"],
+             make_get_signature([BINARY, "tropic01", "sign", "--slot", "2", "--file", "large_test_file.txt"])
          ],
-         cleanup=[BINARY, "erase-key", "--slot", "2"],
+         cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
 run_test("verify - P-256 - user provided key - valid data",
@@ -417,6 +417,16 @@ run_test("verify - P-256 - user provided key - invalid signature + valid file",
 
 run_test("verify - file not found",
          [BINARY, "verify", "--pubkey", P256_PUBKEY, "--file", "invalid_file.txt", "--signature", P256_VALID_SIGNATURE_FILE],
+         expected_exit_code=1)
+
+# Device handling
+run_test("status - missing device", [BINARY, "status"], expected_exit_code=1)
+
+run_test("logs - unexpected device", [BINARY, "tropic01", "logs"], expected_exit_code=1)
+
+run_test("verify pubkey - unexpected device",
+         [BINARY, "tropic01", "verify", "--pubkey", ED25519_PUBKEY, "--data", ED25519_VALID_DATA,
+          "--signature", ED25519_VALID_SIGNATURE_DATA],
          expected_exit_code=1)
 
 print("")    
