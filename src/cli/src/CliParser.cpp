@@ -278,6 +278,13 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     if (operation == "read-key")
     {
         command.operation = Operation::READ_KEY;
+
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
         bool slot_option_used = false;
 
         if (argc < 3)
