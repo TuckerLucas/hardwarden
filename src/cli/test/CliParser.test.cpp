@@ -298,10 +298,11 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unspecified curve")
             {
-                const char* argv[] = {"hsmctl", "generate-key", "--slot", "10"};
+                const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot", "10"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
+                REQUIRE(parsed_command.device == Device::TROPIC01);
                 REQUIRE(parsed_command.operation == Operation::GENERATE_KEY);
                 REQUIRE(parsed_command.options["slot"] == "10");
                 REQUIRE(parsed_command.options["curve"] == "ed25519");
@@ -313,8 +314,8 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("Ed25519")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--slot",
-                                          "12",     "--curve",      "ed25519"};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot",
+                                          "12",     "--curve",  "ed25519"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -327,8 +328,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("P-256")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--slot",
-                                          "18",     "--curve",      "p256"};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot",
+                                          "18",     "--curve",  "p256"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -341,8 +342,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("reversed operation order")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--curve",
-                                          "p256",   "--slot",       "16"};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--curve", "p256",
+                                          "--slot", "16"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -359,7 +360,8 @@ TEST_CASE("CliParser parseCommand")
                 SECTION("lower boundary")
                 {
                     std::string min_slot_str = std::to_string(MIN_SLOT);
-                    const char* argv[] = {"hsmctl", "generate-key", "--slot", min_slot_str.c_str()};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot",
+                                          min_slot_str.c_str()};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -372,7 +374,8 @@ TEST_CASE("CliParser parseCommand")
                 SECTION("upper boundary")
                 {
                     std::string max_slot_str = std::to_string(MAX_SLOT);
-                    const char* argv[] = {"hsmctl", "generate-key", "--slot", max_slot_str.c_str()};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot",
+                                          max_slot_str.c_str()};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -386,7 +389,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("help")
         {
-            const char* argv[] = {"hsmctl", "generate-key", "--help"};
+            const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -395,11 +398,21 @@ TEST_CASE("CliParser parseCommand")
             REQUIRE(parsed_command.requires_help);
         }
 
+        SECTION("missing device")
+        {
+            const char* argv[] = {"hsmctl", "generate-key", "--slot", "10"};
+
+            auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+            REQUIRE(parsed_command.operation == Operation::GENERATE_KEY);
+            REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
+        }
+
         SECTION("missing option")
         {
             SECTION("unspecified curve")
             {
-                const char* argv[] = {"hsmctl", "generate-key"};
+                const char* argv[] = {"hsmctl", "tropic01", "generate-key"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -409,7 +422,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("specified curve")
             {
-                const char* argv[] = {"hsmctl", "generate-key", "--curve", "p256"};
+                const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--curve", "p256"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -422,7 +435,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unknown option")
             {
-                const char* argv[] = {"hsmctl", "generate-key", "--invalid-option"};
+                const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--invalid-option"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -432,7 +445,8 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("trailing garbage after valid command")
             {
-                const char* argv[] = {"hsmctl", "generate-key", "--slot", "0", "garbage"};
+                const char* argv[] = {"hsmctl", "tropic01", "generate-key",
+                                      "--slot", "0",        "garbage"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -444,7 +458,8 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("slot")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--slot", "3", "--slot", "14"};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot", "3",
+                                          "--slot", "14"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -454,8 +469,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("curve")
                 {
-                    const char* argv[] = {"hsmctl",  "generate-key", "--slot",  "3",
-                                          "--curve", "ed25519",      "--curve", "p256"};
+                    const char* argv[] = {"hsmctl",  "tropic01", "generate-key", "--slot", "3",
+                                          "--curve", "ed25519",  "--curve",      "p256"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -471,7 +486,7 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("unspecified curve")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--slot"};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -481,7 +496,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("slot specified first")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--slot", "--curve", "p256"};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key",
+                                          "--slot", "--curve",  "p256"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -491,7 +507,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("curve specified first")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--curve", "p256", "--slot"};
+                    const char* argv[] = {"hsmctl",  "tropic01", "generate-key",
+                                          "--curve", "p256",     "--slot"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -504,7 +521,8 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("slot specified first")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--slot", "13", "--curve"};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key",
+                                          "--slot", "13",       "--curve"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -514,7 +532,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("curve specified first")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--curve", "--slot", "26"};
+                    const char* argv[] = {"hsmctl",  "tropic01", "generate-key",
+                                          "--curve", "--slot",   "26"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -530,7 +549,7 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("not a number")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--slot", "NaN"};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot", "NaN"};
 
                     auto result = parser.parseCommand(std::size(argv), argv);
 
@@ -540,7 +559,7 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("out of boundaries")
                 {
-                    const char* argv[] = {"hsmctl", "generate-key", "--slot", "32"};
+                    const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot", "32"};
 
                     auto result = parser.parseCommand(std::size(argv), argv);
 
@@ -551,8 +570,8 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("curve")
             {
-                const char* argv[] = {"hsmctl", "generate-key", "--slot",
-                                      "27",     "--curve",      "invalid_curve"};
+                const char* argv[] = {"hsmctl", "tropic01", "generate-key", "--slot",
+                                      "27",     "--curve",  "invalid_curve"};
 
                 auto result = parser.parseCommand(std::size(argv), argv);
 

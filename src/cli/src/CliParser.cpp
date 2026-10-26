@@ -157,6 +157,13 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     if (operation == "generate-key")
     {
         command.operation = Operation::GENERATE_KEY;
+
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
         bool slot_option_used = false;
         bool curve_option_used = false;
         command.options["curve"] = "ed25519";
