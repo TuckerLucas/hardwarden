@@ -388,6 +388,13 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     if (operation == "sign")
     {
         command.operation = Operation::SIGN;
+
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
         bool slot_option_used = false;
         bool data_option_used = false;
         bool file_option_used = false;
