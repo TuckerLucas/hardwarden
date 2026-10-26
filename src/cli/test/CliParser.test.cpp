@@ -735,10 +735,11 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unspecified verbosity")
             {
-                const char* argv[] = {"hsmctl", "list-keys"};
+                const char* argv[] = {"hsmctl", "tropic01", "list-keys"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
+                REQUIRE(parsed_command.device == Device::TROPIC01);
                 REQUIRE(parsed_command.operation == Operation::LIST_KEYS);
                 REQUIRE(parsed_command.error == ParseError::NONE);
                 REQUIRE(parsed_command.requires_help == false);
@@ -746,7 +747,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("specified verbosity")
             {
-                const char* argv[] = {"hsmctl", "list-keys", "--verbose"};
+                const char* argv[] = {"hsmctl", "tropic01", "list-keys", "--verbose"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -759,7 +760,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("help")
         {
-            const char* argv[] = {"hsmctl", "list-keys", "--help"};
+            const char* argv[] = {"hsmctl", "tropic01", "list-keys", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -768,11 +769,21 @@ TEST_CASE("CliParser parseCommand")
             REQUIRE(parsed_command.requires_help);
         }
 
+        SECTION("missing device")
+        {
+            const char* argv[] = {"hsmctl", "list-keys"};
+
+            auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+            REQUIRE(parsed_command.operation == Operation::LIST_KEYS);
+            REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
+        }
+
         SECTION("invalid option")
         {
             SECTION("unknown option")
             {
-                const char* argv[] = {"hsmctl", "list-keys", "--some-option"};
+                const char* argv[] = {"hsmctl", "tropic01", "list-keys", "--some-option"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -782,7 +793,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("trailing garbage after valid command")
             {
-                const char* argv[] = {"hsmctl", "list-keys", "--verbose", "garbage"};
+                const char* argv[] = {"hsmctl", "tropic01", "list-keys", "--verbose", "garbage"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
