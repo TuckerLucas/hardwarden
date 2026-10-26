@@ -699,6 +699,12 @@ Command CliParser::parseCommand(int argc, const char* argv[])
         if (slot_option_used && command.device == Device::NONE)
         {
             command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
+        if (pubkey_option_used && command.device != Device::NONE)
+        {
+            command.error = ParseError::UNEXPECTED_DEVICE;
         }
 
         return command;

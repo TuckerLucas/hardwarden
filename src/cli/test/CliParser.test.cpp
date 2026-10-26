@@ -1425,6 +1425,7 @@ TEST_CASE("verify")
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
+            REQUIRE(parsed_command.device == Device::NONE);
             REQUIRE(parsed_command.operation == Operation::VERIFY);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.options["pubkey"] == valid_pubkey_32_bytes.c_str());
@@ -1443,6 +1444,7 @@ TEST_CASE("verify")
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
+            REQUIRE(parsed_command.device == Device::NONE);
             REQUIRE(parsed_command.operation == Operation::VERIFY);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.options["pubkey"] == valid_pubkey_32_bytes.c_str());
@@ -1554,6 +1556,24 @@ TEST_CASE("verify")
 
         REQUIRE(parsed_command.operation == Operation::VERIFY);
         REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
+    }
+
+    SECTION("pubkey with device")
+    {
+        const char* argv[] = {"hsmctl",
+                              "tropic01",
+                              "verify",
+                              "--pubkey",
+                              valid_pubkey_32_bytes.c_str(),
+                              "--data",
+                              "data",
+                              "--signature",
+                              valid_signature.c_str()};
+
+        auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+        REQUIRE(parsed_command.operation == Operation::VERIFY);
+        REQUIRE(parsed_command.error == ParseError::UNEXPECTED_DEVICE);
     }
 
     SECTION("invalid option")
