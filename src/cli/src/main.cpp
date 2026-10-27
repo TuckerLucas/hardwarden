@@ -53,7 +53,15 @@ int main(int argc, const char* argv[])
     {
         case Operation::HELP:
         {
-            display.helpMenu();
+            if (command.device == Device::NONE)
+            {
+                display.helpMenu();
+            }
+            else
+            {
+                display.deviceHelpMenu(command.device);
+            }
+
             return 0;
         }
         case Operation::STATUS:

@@ -12,6 +12,7 @@ class CliDisplay
 {
 public:
     void helpMenu();
+    void deviceHelpMenu(Device device);
     void commandError(Command command);
 
     void statusResult(SystemStatus result);

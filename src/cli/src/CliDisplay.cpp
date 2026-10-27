@@ -5,7 +5,8 @@
 
 void CliDisplay::helpMenu()
 {
-    std::cout << "hsmctl <operation> [options]\n";
+    std::cout << "hsmctl <device> <operation> [options]\n";
+    std::cout << "hsmctl <command> [options]\n";
     std::cout << "\n";
     std::cout << "HSM key management and audit logging.\n";
     std::cout << "\n";
@@ -14,9 +15,11 @@ void CliDisplay::helpMenu()
     std::cout << "        Global flags:\n";
     std::cout << "                     --help         Show this help menu.\n";
     std::cout << "\n";
-    std::cout << "        Operations:\n";
+    std::cout << "        Devices:\n";
+    std::cout << "                     tropic01       Tropic Square TROPIC01 secure element.\n";
+    std::cout << "\n";
+    std::cout << "        Device operations:\n";
     std::cout << "                     status         Check if the HSM is connected.\n";
-    std::cout << "                     logs           Display HSM audit logs.\n";
     std::cout << "                     erase-key      Erase a key.\n";
     std::cout << "                     generate-key   Generate an ECC key pair.\n";
     std::cout << "                     read-key       Read back a public key.\n";
@@ -24,11 +27,44 @@ void CliDisplay::helpMenu()
     std::cout
         << "                     sign           Sign data/file using a hardware backed key.\n";
     std::cout << "                     verify         Verify a signature using a hardware backed "
-                 "or user provided key.\n";
+                 "key (--slot).\n";
     std::cout << "\n";
-    std::cout << "Hint:\n";
+    std::cout << "        Commands (no device):\n";
+    std::cout << "                     logs           Display HSM audit logs.\n";
+    std::cout << "                     verify         Verify a signature using a user provided "
+                 "key (--pubkey).\n";
     std::cout << "\n";
-    std::cout << "        Run 'hsmctl <operation> --help' for operation specific options.\n";
+    std::cout << "Hints:\n";
+    std::cout << "\n";
+    std::cout << "        Run 'hsmctl <device> --help' for device specific information.\n";
+    std::cout << "        Run 'hsmctl <device> <operation> --help' for operation specific "
+                 "options.\n";
+    std::cout << "        Run 'hsmctl <command> --help' for command specific options.\n";
+}
+
+void CliDisplay::deviceHelpMenu(Device device)
+{
+    switch (device)
+    {
+        case Device::TROPIC01:
+            std::cout << "hsmctl tropic01 <operation> [options]\n";
+            std::cout << "\n";
+            std::cout << "Tropic Square TROPIC01 secure element.\n";
+            std::cout << "\n";
+            std::cout << "        Key slots:   0-31\n";
+            std::cout << "        Curves:      ed25519, p256\n";
+            std::cout << "\n";
+            std::cout << "        Operations:  status, erase-key, generate-key, read-key, "
+                         "list-keys, sign, verify\n";
+            std::cout << "\n";
+            std::cout << "Hint:\n";
+            std::cout << "\n";
+            std::cout << "        Run 'hsmctl tropic01 <operation> --help' for operation "
+                         "specific options.\n";
+            break;
+        default:
+            assert(false && "Unhandled device value in deviceHelpMenu");
+    }
 }
 
 void CliDisplay::commandError(Command command)
