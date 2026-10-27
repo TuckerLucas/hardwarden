@@ -46,6 +46,19 @@ void CliDisplay::commandError(Command command)
                 << "Invalid operation specified. Run 'hsmctl --help' for available operations.\n";
             break;
         }
+        case ParseError::MISSING_DEVICE:
+        {
+            std::cout << operationToString(command.operation)
+                      << ": missing device. Run 'hsmctl --help' for available devices.\n";
+            break;
+        }
+        case ParseError::UNEXPECTED_DEVICE:
+        {
+            std::cout << operationToString(command.operation)
+                      << ": does not take a device. Run 'hsmctl "
+                      << operationToString(command.operation) << " --help' for usage.\n";
+            break;
+        }
         case ParseError::MISSING_OPTION:
         {
             std::cout << operationToString(command.operation) << ": missing an option.\n";
