@@ -253,29 +253,3 @@ SystemStatus HsmManager::verifyWithHsmKey(uint8_t slot, std::vector<uint8_t> pay
     m_logger.log(Operation::VERIFY, result, options);
     return result;
 }
-
-SystemStatus HsmManager::verifyWithUserKey(std::vector<uint8_t> pubKey,
-                                           std::vector<uint8_t> payload,
-                                           std::vector<uint8_t> signature, DataSource dataSource,
-                                           std::string filepath)
-{
-    SystemStatus result;
-
-    std::string options = "user-key type=" + dataSourceToString(dataSource);
-
-    if (dataSource == DataSource::FILE)
-    {
-        options += " path=" + filepath;
-    }
-
-    result = m_se.verify(pubKey, payload, signature);
-
-    if (result != SystemStatus::OK)
-    {
-        m_logger.log(Operation::VERIFY, result, options);
-        return result;
-    }
-
-    m_logger.log(Operation::VERIFY, result, options);
-    return result;
-}

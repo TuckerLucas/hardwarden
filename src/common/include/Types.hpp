@@ -22,6 +22,13 @@ enum class Operation
     NONE,
 };
 
+enum class Device
+{
+    TROPIC01,
+
+    NONE,
+};
+
 enum class DataSource
 {
     DATA,

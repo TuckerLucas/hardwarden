@@ -6,6 +6,13 @@ Command CliParser::parseCommand(int argc, const char* argv[])
 {
     Command command;
 
+    if (argc >= 2 && std::string(argv[1]) == "tropic01")
+    {
+        command.device = Device::TROPIC01;
+        argc--;
+        argv++;
+    }
+
     if (argc < 2)
     {
         command.error = ParseError::MISSING_OPERATION;
@@ -30,6 +37,12 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::STATUS;
 
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
         if (argc == 3 && std::string(argv[2]) == "--help")
         {
             command.requires_help = true;
@@ -48,6 +61,12 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::LOGS;
 
+        if (command.device != Device::NONE)
+        {
+            command.error = ParseError::UNEXPECTED_DEVICE;
+            return command;
+        }
+
         if (argc == 3 && std::string(argv[2]) == "--help")
         {
             command.requires_help = true;
@@ -65,6 +84,13 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     if (operation == "erase-key")
     {
         command.operation = Operation::ERASE_KEY;
+
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
         bool slot_option_used = false;
 
         if (argc < 3)
@@ -137,6 +163,13 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     if (operation == "generate-key")
     {
         command.operation = Operation::GENERATE_KEY;
+
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
         bool slot_option_used = false;
         bool curve_option_used = false;
         command.options["curve"] = "ed25519";
@@ -251,6 +284,13 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     if (operation == "read-key")
     {
         command.operation = Operation::READ_KEY;
+
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
         bool slot_option_used = false;
 
         if (argc < 3)
@@ -324,6 +364,12 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::LIST_KEYS;
 
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
         if (argc == 3 && std::string(argv[2]) == "--help")
         {
             command.requires_help = true;
@@ -348,6 +394,13 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     if (operation == "sign")
     {
         command.operation = Operation::SIGN;
+
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
         bool slot_option_used = false;
         bool data_option_used = false;
         bool file_option_used = false;
@@ -471,8 +524,14 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     if (operation == "verify")
     {
         command.operation = Operation::VERIFY;
+
+        if (command.device == Device::NONE)
+        {
+            command.error = ParseError::MISSING_DEVICE;
+            return command;
+        }
+
         bool slot_option_used = false;
-        bool pubkey_option_used = false;
         bool data_option_used = false;
         bool file_option_used = false;
         bool signature_option_used = false;
@@ -493,7 +552,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
             }
             else if (arg == "--slot")
             {
-                if (slot_option_used || pubkey_option_used)
+                if (slot_option_used)
                 {
                     command.error = ParseError::INVALID_OPTION;
                     return command;
@@ -526,40 +585,6 @@ Command CliParser::parseCommand(int argc, const char* argv[])
                     command.error = ParseError::INVALID_VALUE;
                     return command;
                 }
-            }
-            else if (arg == "--pubkey")
-            {
-                if (pubkey_option_used || slot_option_used)
-                {
-                    command.error = ParseError::INVALID_OPTION;
-                    return command;
-                }
-
-                pubkey_option_used = true;
-
-                i++;
-
-                if (i >= argc || std::string(argv[i]).substr(0, 2) == "--")
-                {
-                    command.error = ParseError::MISSING_VALUE;
-                    return command;
-                }
-
-                std::string pubkey = std::string(argv[i]);
-
-                if (pubkey.size() != 64 && pubkey.size() != 128)
-                {
-                    command.error = ParseError::INVALID_VALUE;
-                    return command;
-                }
-
-                if (!isValidHex(pubkey))
-                {
-                    command.error = ParseError::INVALID_VALUE;
-                    return command;
-                }
-
-                command.options["pubkey"] = std::string(argv[i]);
             }
             else if (arg == "--data")
             {
@@ -642,8 +667,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
             }
         }
 
-        if ((!slot_option_used && !pubkey_option_used) ||
-            (!data_option_used && !file_option_used) || !signature_option_used)
+        if (!slot_option_used || (!data_option_used && !file_option_used) || !signature_option_used)
         {
             command.error = ParseError::MISSING_OPTION;
         }

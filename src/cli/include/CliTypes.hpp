@@ -10,6 +10,8 @@
 
 enum class ParseError
 {
+    MISSING_DEVICE,
+    UNEXPECTED_DEVICE,
     MISSING_OPERATION,
     INVALID_OPERATION,
     MISSING_OPTION,
@@ -22,6 +24,7 @@ enum class ParseError
 
 struct Command
 {
+    Device device = Device::NONE;
     Operation operation = Operation::NONE;
     std::unordered_map<std::string, std::string> options;
     bool requires_help = false;

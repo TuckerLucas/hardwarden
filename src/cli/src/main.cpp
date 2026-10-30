@@ -53,7 +53,15 @@ int main(int argc, const char* argv[])
     {
         case Operation::HELP:
         {
-            display.helpMenu();
+            if (command.device == Device::NONE)
+            {
+                display.helpMenu();
+            }
+            else
+            {
+                display.deviceHelpMenu(command.device);
+            }
+
             return 0;
         }
         case Operation::STATUS:
@@ -182,18 +190,9 @@ int main(int argc, const char* argv[])
                                                std::istreambuf_iterator<char>());
             }
 
-            if (!command.options["slot"].empty())
-            {
-                uint8_t slot = std::stoi(command.options["slot"]);
+            uint8_t slot = std::stoi(command.options["slot"]);
 
-                result = hsm.verifyWithHsmKey(slot, payload, signature, dataSource, filepath);
-            }
-            else
-            {
-                std::vector<uint8_t> pubkey = hexToBytes(command.options["pubkey"]);
-
-                result = hsm.verifyWithUserKey(pubkey, payload, signature, dataSource, filepath);
-            }
+            result = hsm.verifyWithHsmKey(slot, payload, signature, dataSource, filepath);
 
             display.verifyResult(result);
 

@@ -5,6 +5,7 @@
 
 void CliDisplay::helpMenu()
 {
+    std::cout << "hsmctl <device> <operation> [options]\n";
     std::cout << "hsmctl <operation> [options]\n";
     std::cout << "\n";
     std::cout << "HSM key management and audit logging.\n";
@@ -14,9 +15,11 @@ void CliDisplay::helpMenu()
     std::cout << "        Global flags:\n";
     std::cout << "                     --help         Show this help menu.\n";
     std::cout << "\n";
-    std::cout << "        Operations:\n";
+    std::cout << "        Devices:\n";
+    std::cout << "                     tropic01       Tropic Square TROPIC01 secure element.\n";
+    std::cout << "\n";
+    std::cout << "        Device operations:\n";
     std::cout << "                     status         Check if the HSM is connected.\n";
-    std::cout << "                     logs           Display HSM audit logs.\n";
     std::cout << "                     erase-key      Erase a key.\n";
     std::cout << "                     generate-key   Generate an ECC key pair.\n";
     std::cout << "                     read-key       Read back a public key.\n";
@@ -24,11 +27,43 @@ void CliDisplay::helpMenu()
     std::cout
         << "                     sign           Sign data/file using a hardware backed key.\n";
     std::cout << "                     verify         Verify a signature using a hardware backed "
-                 "or user provided key.\n";
+                 "key.\n";
     std::cout << "\n";
-    std::cout << "Hint:\n";
+    std::cout << "        Deviceless operations:\n";
+    std::cout << "                     logs           Display HSM audit logs.\n";
     std::cout << "\n";
-    std::cout << "        Run 'hsmctl <operation> --help' for operation specific options.\n";
+    std::cout << "Hints:\n";
+    std::cout << "\n";
+    std::cout << "        Run 'hsmctl <device> --help' for device specific information.\n";
+    std::cout << "        Run 'hsmctl <device> <operation> --help' for operation specific "
+                 "options.\n";
+    std::cout
+        << "        Run 'hsmctl <operation> --help' for deviceless operation specific options.\n";
+}
+
+void CliDisplay::deviceHelpMenu(Device device)
+{
+    switch (device)
+    {
+        case Device::TROPIC01:
+            std::cout << "hsmctl tropic01 <operation> [options]\n";
+            std::cout << "\n";
+            std::cout << "Tropic Square TROPIC01 secure element.\n";
+            std::cout << "\n";
+            std::cout << "        Key slots:   0-31\n";
+            std::cout << "        Curves:      ed25519, p256\n";
+            std::cout << "\n";
+            std::cout << "        Operations:  status, erase-key, generate-key, read-key, "
+                         "list-keys, sign, verify\n";
+            std::cout << "\n";
+            std::cout << "Hint:\n";
+            std::cout << "\n";
+            std::cout << "        Run 'hsmctl tropic01 <operation> --help' for operation "
+                         "specific options.\n";
+            break;
+        default:
+            assert(false && "Unhandled device value in deviceHelpMenu");
+    }
 }
 
 void CliDisplay::commandError(Command command)
@@ -44,6 +79,19 @@ void CliDisplay::commandError(Command command)
         {
             std::cout
                 << "Invalid operation specified. Run 'hsmctl --help' for available operations.\n";
+            break;
+        }
+        case ParseError::MISSING_DEVICE:
+        {
+            std::cout << operationToString(command.operation)
+                      << ": missing device. Run 'hsmctl --help' for available devices.\n";
+            break;
+        }
+        case ParseError::UNEXPECTED_DEVICE:
+        {
+            std::cout << operationToString(command.operation)
+                      << ": does not take a device. Run 'hsmctl "
+                      << operationToString(command.operation) << " --help' for usage.\n";
             break;
         }
         case ParseError::MISSING_OPTION:
@@ -153,7 +201,7 @@ void CliDisplay::generateKeyResult(SystemStatus result, Command command)
         else if (result == SystemStatus::HSM_ERROR_GENERATE_KEY_SLOT_OCCUPIED)
         {
             std::cout << "slot " << command.options["slot"] << " already contains a key.\n";
-            std::cout << "Run 'hsmctl erase-key --slot " << command.options["slot"]
+            std::cout << "Run 'hsmctl tropic01 erase-key --slot " << command.options["slot"]
                       << "' to erase it first.\n";
         }
         else if (result == SystemStatus::HSM_ERROR_GENERATE_KEY_HW_ERROR)
@@ -209,7 +257,7 @@ void CliDisplay::readKeyResult(SystemStatus result, uint8_t slot, std::vector<ui
         {
             std::cout << "slot " << static_cast<int>(slot) << " is empty.";
             std::cout << "\n";
-            std::cout << "Run 'hsmctl generate-key --slot " << static_cast<int>(slot)
+            std::cout << "Run 'hsmctl tropic01 generate-key --slot " << static_cast<int>(slot)
                       << "' to generate a key first.\n";
         }
         else if (result == SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR)
@@ -326,8 +374,9 @@ void CliDisplay::signResult(SystemStatus result, std::vector<uint8_t> signature)
         else if (result == SystemStatus::HSM_ERROR_INIT)
             std::cout << "initialisation error. Check that the secure element is connected.\n";
         else if (result == SystemStatus::HSM_ERROR_READ_KEY_EMPTY_SLOT)
-            std::cout << "slot is empty. Generate a key first using 'hsmctl generate-key --slot "
-                         "<slot>'.\n";
+            std::cout
+                << "slot is empty. Generate a key first using 'hsmctl tropic01 generate-key --slot "
+                   "<slot>'.\n";
         else if (result == SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR)
             std::cout << "hardware error reading key from slot. Check that the secure element is "
                          "connected.\n";
@@ -356,8 +405,9 @@ void CliDisplay::verifyResult(SystemStatus result)
         else if (result == SystemStatus::HSM_ERROR_INIT)
             std::cout << "initialisation error. Check that the secure element is connected.\n";
         else if (result == SystemStatus::HSM_ERROR_READ_KEY_EMPTY_SLOT)
-            std::cout << "slot is empty. Generate a key first using 'hsmctl generate-key --slot "
-                         "<slot>'.\n";
+            std::cout
+                << "slot is empty. Generate a key first using 'hsmctl tropic01 generate-key --slot "
+                   "<slot>'.\n";
         else if (result == SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR)
             std::cout << "hardware error reading key from slot. Check that the secure element is "
                          "connected.\n";
@@ -378,13 +428,13 @@ void CliDisplay::verifyResult(SystemStatus result)
 void CliDisplay::status_help()
 {
     std::cout << "Usage:\n";
-    std::cout << "        hsmctl status\n";
+    std::cout << "        hsmctl <device> status\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Checks if the HSM is connected and responding.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hsmctl status\n";
+    std::cout << "        hsmctl tropic01 status\n";
 }
 
 void CliDisplay::logs_help()
@@ -402,7 +452,7 @@ void CliDisplay::logs_help()
 void CliDisplay::eraseKey_help()
 {
     std::cout << "Usage:\n";
-    std::cout << "        hsmctl erase-key --slot <slot>\n";
+    std::cout << "        hsmctl <device> erase-key --slot <slot>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Erases the key stored in the specified slot on the HSM.\n";
@@ -412,14 +462,14 @@ void CliDisplay::eraseKey_help()
               << ">    Slot number to erase.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hsmctl erase-key --slot 0\n";
-    std::cout << "        hsmctl erase-key --slot 28\n";
+    std::cout << "        hsmctl tropic01 erase-key --slot 0\n";
+    std::cout << "        hsmctl tropic01 erase-key --slot 28\n";
 }
 
 void CliDisplay::generateKey_help()
 {
     std::cout << "Usage:\n";
-    std::cout << "        hsmctl generate-key --slot <slot>\n";
+    std::cout << "        hsmctl <device> generate-key --slot <slot>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Generates an ECC key pair in the specified slot on the HSM.\n";
@@ -432,16 +482,16 @@ void CliDisplay::generateKey_help()
     std::cout << "                          p256      NIST P-256 curve\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hsmctl generate-key --slot 3\n";
-    std::cout << "        hsmctl generate-key --slot 3 --curve ed25519\n";
-    std::cout << "        hsmctl generate-key --slot 3 --curve p256\n";
-    std::cout << "        hsmctl generate-key --curve p256 --slot 3\n";
+    std::cout << "        hsmctl tropic01 generate-key --slot 3\n";
+    std::cout << "        hsmctl tropic01 generate-key --slot 3 --curve ed25519\n";
+    std::cout << "        hsmctl tropic01 generate-key --slot 3 --curve p256\n";
+    std::cout << "        hsmctl tropic01 generate-key --curve p256 --slot 3\n";
 }
 
 void CliDisplay::readKey_help()
 {
     std::cout << "Usage:\n";
-    std::cout << "        hsmctl read-key --slot <slot>\n";
+    std::cout << "        hsmctl <device> read-key --slot <slot>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Reads the public key stored in the specified slot on the HSM.\n";
@@ -451,14 +501,14 @@ void CliDisplay::readKey_help()
               << ">    Slot number to erase.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hsmctl read-key --slot 2\n";
-    std::cout << "        hsmctl read-key --slot 31\n";
+    std::cout << "        hsmctl tropic01 read-key --slot 2\n";
+    std::cout << "        hsmctl tropic01 read-key --slot 31\n";
 }
 
 void CliDisplay::listKeys_help()
 {
     std::cout << "Usage:\n";
-    std::cout << "        hsmctl list-keys\n";
+    std::cout << "        hsmctl <device> list-keys\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Display all public keys stored on the HSM.\n";
@@ -467,15 +517,15 @@ void CliDisplay::listKeys_help()
     std::cout << "        --verbose   Show complete key values.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hsmctl list-keys\n";
-    std::cout << "        hsmctl list-keys --verbose\n";
+    std::cout << "        hsmctl tropic01 list-keys\n";
+    std::cout << "        hsmctl tropic01 list-keys --verbose\n";
 }
 
 void CliDisplay::sign_help()
 {
     std::cout << "Usage:\n";
-    std::cout << "        hsmctl sign --slot <slot> --data <data>\n";
-    std::cout << "        hsmctl sign --slot <slot> --file <path>\n";
+    std::cout << "        hsmctl <device> sign --slot <slot> --data <data>\n";
+    std::cout << "        hsmctl <device> sign --slot <slot> --file <path>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Sign data or a file using a hardware-backed key stored in the specified "
@@ -488,30 +538,24 @@ void CliDisplay::sign_help()
     std::cout << "        --file <path>   Path to file to sign (mutually exclusive with --data).\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hsmctl sign --slot 0 --data \"hello\"\n";
-    std::cout << "        hsmctl sign --slot 15 --file document.pdf\n";
-    std::cout << "        hsmctl sign --data \"hello\" --slot 20\n";
-    std::cout << "        hsmctl sign --file document.pdf --slot 12\n";
+    std::cout << "        hsmctl tropic01 sign --slot 0 --data \"hello\"\n";
+    std::cout << "        hsmctl tropic01 sign --slot 15 --file document.pdf\n";
+    std::cout << "        hsmctl tropic01 sign --data \"hello\" --slot 20\n";
+    std::cout << "        hsmctl tropic01 sign --file document.pdf --slot 12\n";
 }
 
 void CliDisplay::verify_help()
 {
     std::cout << "Usage:\n";
-    std::cout << "        hsmctl verify --slot <slot> --data <data> --signature <hex>\n";
-    std::cout << "        hsmctl verify --slot <slot> --file <path> --signature <hex>\n";
-    std::cout << "        hsmctl verify --pubkey <hex> --data <data> --signature <hex>\n";
-    std::cout << "        hsmctl verify --pubkey <hex> --file <path> --signature <hex>\n";
+    std::cout << "        hsmctl <device> verify --slot <slot> --data <data> --signature <hex>\n";
+    std::cout << "        hsmctl <device> verify --slot <slot> --file <path> --signature <hex>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout
-        << "        Verify a signature over data or a file using a public key stored on the\n";
-    std::cout << "        HSM or provided directly.\n";
+    std::cout << "        Verify a signature over data or a file using the public key stored in\n";
+    std::cout << "        the specified slot.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
-    std::cout << "        --slot <0-31>      Slot containing the public key (mutually exclusive "
-                 "with --pubkey).\n";
-    std::cout << "        --pubkey <hex>     Public key in hex format (mutually exclusive with "
-                 "--slot).\n";
+    std::cout << "        --slot <0-31>      Slot containing the public key (required).\n";
     std::cout
         << "        --data <data>      Data that was signed (mutually exclusive with --file).\n";
     std::cout << "        --file <path>      Path to file that was signed (mutually exclusive with "
@@ -519,12 +563,10 @@ void CliDisplay::verify_help()
     std::cout << "        --signature <hex>  Signature in hex format (required).\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hsmctl verify --slot 0 --data \"hello\" --signature ab12cd34...\n";
-    std::cout << "        hsmctl verify --slot 15 --file document.pdf --signature ab12cd34...\n";
-    std::cout << "        hsmctl verify --pubkey bf98aad487c19154...f3b8a20a --data \"hello\" "
-                 "--signature ab12cd34...\n";
-    std::cout << "        hsmctl verify --pubkey bf98aad487c19154...f3b8a20a --file document.pdf "
-                 "--signature ab12cd34...\n";
+    std::cout
+        << "        hsmctl tropic01 verify --slot 0 --data \"hello\" --signature ab12cd34...\n";
+    std::cout
+        << "        hsmctl tropic01 verify --slot 15 --file document.pdf --signature ab12cd34...\n";
 }
 
 void CliDisplay::operationHelpMenu(Operation op)

@@ -21,9 +21,6 @@ public:
     SystemStatus verifyWithHsmKey(uint8_t slot, std::vector<uint8_t> payload,
                                   std::vector<uint8_t> signature, DataSource dataSource,
                                   std::string filepath = "");
-    SystemStatus verifyWithUserKey(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
-                                   std::vector<uint8_t> signature, DataSource dataSource,
-                                   std::string filepath = "");
 
 private:
     IHsm& m_se;

@@ -37,55 +37,55 @@ sudo make install
 
 ## Supported operations
 
-| Operation | Description | Usage |
+| Operation | Description | Options |
 |---------|-------------|---------|
 | `status` | Check if the secure element is connected | — |
-| `logs` | Display the full audit log | — |
+| `logs` | Display the full audit log (deviceless) | — |
 | `generate-key` | Generate an ECC key pair in a hardware slot | `<--slot <0-31>>` `[--curve <ed25519 \| p256>]` |
 | `erase-key` | Erase the key stored in a slot | `<--slot <0-31>>` |
 | `read-key` | Read back the public key from a slot | `<--slot <0-31>>` |
 | `list-keys` | List all public keys stored on the HSM | `[--verbose]` |
 | `sign` | Sign data or a file using a hardware backed key | `<--slot <0-31>>` `<--data <data> \| --file <path>>` |
-| `verify` | Verify a signature using a hardware backed or user provided key | `<--slot <0-31> \| --pubkey <public key>>` `<--data <data> \| --file <path>>` `<--signature <signature>>` |
+| `verify` | Verify a signature using a hardware backed key | `<--slot <0-31>>` `<--data <data> \| --file <path>>` `<--signature <signature>>` |
 
 ## Quick start
 
 ```bash
 # Confirm the secure element is connected
-hsmctl status
+hsmctl tropic01 status
 
 # Generate an ECC key pair in slot 0 (Ed25519 by default)
-hsmctl generate-key --slot 0
+hsmctl tropic01 generate-key --slot 0
 
 # Generate a NIST P-256 ECC key pair in slot 1
-hsmctl generate-key --slot 1 --curve p256
+hsmctl tropic01 generate-key --slot 1 --curve p256
 
 # Generate an Ed25519 ECC key pair in slot 29
-hsmctl generate-key --slot 29 --curve ed25519
+hsmctl tropic01 generate-key --slot 29 --curve ed25519
 
 # Read back the public key from slot 0
-hsmctl read-key --slot 0
+hsmctl tropic01 read-key --slot 0
 
 # Erase the key from slot 0
-hsmctl erase-key --slot 0
+hsmctl tropic01 erase-key --slot 0
 
 # List all public keys stored on the HSM
-hsmctl list-keys
+hsmctl tropic01 list-keys
 
 # Sign a message using the key in slot 1 (outputs 1st signature)
-hsmctl sign --slot 1 --data "hello from hsmctl"
+hsmctl tropic01 sign --slot 1 --data "hello from hsmctl"
 
 # Create a sample file to sign 
 echo "test file content" > sample.txt
 
 # Sign the file using the key in slot 29 (outputs 2nd signature)
-hsmctl sign --slot 29 --file sample.txt
+hsmctl tropic01 sign --slot 29 --file sample.txt
 
 # Verify the signed data
-hsmctl verify --slot 1 --data "hello from hsmctl" --signature <1st signature>
+hsmctl tropic01 verify --slot 1 --data "hello from hsmctl" --signature <1st signature>
 
 # Verify the signed file
-hsmctl verify --slot 29 --file sample.txt --signature <2nd signature>
+hsmctl tropic01 verify --slot 29 --file sample.txt --signature <2nd signature>
 
 # View the audit log
 hsmctl logs
