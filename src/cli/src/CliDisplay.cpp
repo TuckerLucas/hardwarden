@@ -6,7 +6,7 @@
 void CliDisplay::helpMenu()
 {
     std::cout << "hsmctl <device> <operation> [options]\n";
-    std::cout << "hsmctl <command> [options]\n";
+    std::cout << "hsmctl <operation> [options]\n";
     std::cout << "\n";
     std::cout << "HSM key management and audit logging.\n";
     std::cout << "\n";
@@ -27,19 +27,18 @@ void CliDisplay::helpMenu()
     std::cout
         << "                     sign           Sign data/file using a hardware backed key.\n";
     std::cout << "                     verify         Verify a signature using a hardware backed "
-                 "key (--slot).\n";
+                 "key.\n";
     std::cout << "\n";
-    std::cout << "        Commands (no device):\n";
+    std::cout << "        Deviceless operations:\n";
     std::cout << "                     logs           Display HSM audit logs.\n";
-    std::cout << "                     verify         Verify a signature using a user provided "
-                 "key (--pubkey).\n";
     std::cout << "\n";
     std::cout << "Hints:\n";
     std::cout << "\n";
     std::cout << "        Run 'hsmctl <device> --help' for device specific information.\n";
     std::cout << "        Run 'hsmctl <device> <operation> --help' for operation specific "
                  "options.\n";
-    std::cout << "        Run 'hsmctl <command> --help' for command specific options.\n";
+    std::cout
+        << "        Run 'hsmctl <operation> --help' for deviceless operation specific options.\n";
 }
 
 void CliDisplay::deviceHelpMenu(Device device)
@@ -550,19 +549,13 @@ void CliDisplay::verify_help()
     std::cout << "Usage:\n";
     std::cout << "        hsmctl <device> verify --slot <slot> --data <data> --signature <hex>\n";
     std::cout << "        hsmctl <device> verify --slot <slot> --file <path> --signature <hex>\n";
-    std::cout << "        hsmctl verify --pubkey <hex> --data <data> --signature <hex>\n";
-    std::cout << "        hsmctl verify --pubkey <hex> --file <path> --signature <hex>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout
-        << "        Verify a signature over data or a file using a public key stored on the\n";
-    std::cout << "        HSM or provided directly.\n";
+    std::cout << "        Verify a signature over data or a file using the public key stored in\n";
+    std::cout << "        the specified slot.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
-    std::cout << "        --slot <0-31>      Slot containing the public key (mutually exclusive "
-                 "with --pubkey).\n";
-    std::cout << "        --pubkey <hex>     Public key in hex format (mutually exclusive with "
-                 "--slot).\n";
+    std::cout << "        --slot <0-31>      Slot containing the public key (required).\n";
     std::cout
         << "        --data <data>      Data that was signed (mutually exclusive with --file).\n";
     std::cout << "        --file <path>      Path to file that was signed (mutually exclusive with "
@@ -574,10 +567,6 @@ void CliDisplay::verify_help()
         << "        hsmctl tropic01 verify --slot 0 --data \"hello\" --signature ab12cd34...\n";
     std::cout
         << "        hsmctl tropic01 verify --slot 15 --file document.pdf --signature ab12cd34...\n";
-    std::cout << "        hsmctl verify --pubkey bf98aad487c19154...f3b8a20a --data \"hello\" "
-                 "--signature ab12cd34...\n";
-    std::cout << "        hsmctl verify --pubkey bf98aad487c19154...f3b8a20a --file document.pdf "
-                 "--signature ab12cd34...\n";
 }
 
 void CliDisplay::operationHelpMenu(Operation op)
