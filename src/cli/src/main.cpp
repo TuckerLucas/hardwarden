@@ -210,7 +210,7 @@ int main(int argc, const char* argv[])
 std::string getDbPath()
 {
     const char* home = getenv("HOME");
-    std::string dir = std::string(home) + "/.hsmctl";
+    std::string dir = std::string(home) + "/.hardwarden";
     mkdir(dir.c_str(), 0700);
     return dir + "/audit.db";
 }

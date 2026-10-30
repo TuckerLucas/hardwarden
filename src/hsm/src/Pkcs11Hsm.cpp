@@ -347,7 +347,7 @@ SystemStatus Pkcs11Hsm::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
             return SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR;
         }
 
-        // hsmctl slots are a single byte, 0-31. Skip anything else.
+        // hardwarden slots are a single byte, 0-31. Skip anything else.
         if (idAttr.ulValueLen != 1 || id[0] >= 32)
         {
             continue;

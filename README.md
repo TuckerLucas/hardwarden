@@ -1,12 +1,12 @@
-# hsmctl
+# Hardwarden
 
 A command line interface tool for Hardware Security Module key management and audit logging. 
 
-Built on the [TROPIC01](https://www.tropicsquare.com/tropic01) secure element, hsmctl provides hardware backed key lifecycle management through key generation, reading, and erasure, with a persistent audit trail of every operation. Private keys are generated inside the secure element chip and never leave the hardware.
+Built on the [TROPIC01](https://www.tropicsquare.com/tropic01) secure element, hardwarden provides hardware backed key lifecycle management through key generation, reading, and erasure, with a persistent audit trail of every operation. Private keys are generated inside the secure element chip and never leave the hardware.
 
 ## Hardware Requirements
 
-The following hardware is required in order to use hsmctl: 
+The following hardware is required in order to use hardwarden: 
 
 - Raspberry Pi - available at [Raspberry Pi Foundation](https://www.raspberrypi.com/)
 
@@ -27,8 +27,8 @@ sudo apt install libssl-dev
 ## Building and installing
 
 ```bash
-git clone https://github.com/TuckerLucas/hsmctl
-cd hsmctl
+git clone https://github.com/TuckerLucas/hardwarden
+cd hardwarden
 mkdir build && cd build
 cmake ..
 make
@@ -52,43 +52,43 @@ sudo make install
 
 ```bash
 # Confirm the secure element is connected
-hsmctl tropic01 status
+hwarden tropic01 status
 
 # Generate an ECC key pair in slot 0 (Ed25519 by default)
-hsmctl tropic01 generate-key --slot 0
+hwarden tropic01 generate-key --slot 0
 
 # Generate a NIST P-256 ECC key pair in slot 1
-hsmctl tropic01 generate-key --slot 1 --curve p256
+hwarden tropic01 generate-key --slot 1 --curve p256
 
 # Generate an Ed25519 ECC key pair in slot 29
-hsmctl tropic01 generate-key --slot 29 --curve ed25519
+hwarden tropic01 generate-key --slot 29 --curve ed25519
 
 # Read back the public key from slot 0
-hsmctl tropic01 read-key --slot 0
+hwarden tropic01 read-key --slot 0
 
 # Erase the key from slot 0
-hsmctl tropic01 erase-key --slot 0
+hwarden tropic01 erase-key --slot 0
 
 # List all public keys stored on the HSM
-hsmctl tropic01 list-keys
+hwarden tropic01 list-keys
 
 # Sign a message using the key in slot 1 (outputs 1st signature)
-hsmctl tropic01 sign --slot 1 --data "hello from hsmctl"
+hwarden tropic01 sign --slot 1 --data "hello from hardwarden"
 
 # Create a sample file to sign 
 echo "test file content" > sample.txt
 
 # Sign the file using the key in slot 29 (outputs 2nd signature)
-hsmctl tropic01 sign --slot 29 --file sample.txt
+hwarden tropic01 sign --slot 29 --file sample.txt
 
 # Verify the signed data
-hsmctl tropic01 verify --slot 1 --data "hello from hsmctl" --signature <1st signature>
+hwarden tropic01 verify --slot 1 --data "hello from hardwarden" --signature <1st signature>
 
 # Verify the signed file
-hsmctl tropic01 verify --slot 29 --file sample.txt --signature <2nd signature>
+hwarden tropic01 verify --slot 29 --file sample.txt --signature <2nd signature>
 
 # View the audit log
-hsmctl logs
+hwarden logs
 ```
 
 The `list-keys` operation presents a list of all public keys stored on the HSM, as shown below:
@@ -103,7 +103,7 @@ Slot    Curve     Public Key
 2 key(s) found
 ```
 
-All operations are logged automatically to `~/.hsmctl/audit.db` and can be retrieved using the `logs` operation. The quick start commands above produce the following:
+All operations are logged automatically to `~/.hardwarden/audit.db` and can be retrieved using the `logs` operation. The quick start commands above produce the following:
 
 ```
 Audit Log
