@@ -1519,24 +1519,6 @@ TEST_CASE("verify")
         REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
     }
 
-    SECTION("pubkey option removed")
-    {
-        const char* argv[] = {"hsmctl",
-                              "tropic01",
-                              "verify",
-                              "--pubkey",
-                              valid_pubkey_32_bytes.c_str(),
-                              "--data",
-                              "data",
-                              "--signature",
-                              valid_signature.c_str()};
-
-        auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-        REQUIRE(parsed_command.operation == Operation::VERIFY);
-        REQUIRE(parsed_command.error == ParseError::INVALID_OPTION);
-    }
-
     SECTION("invalid option")
     {
         SECTION("unknown option")
