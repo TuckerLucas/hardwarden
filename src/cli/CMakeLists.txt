@@ -1,25 +1,25 @@
 # ==== CLI executable ====
-add_executable(hsmctl
+add_executable(hwarden
     src/main.cpp
     src/CliParser.cpp
     src/CliDisplay.cpp
 )
 
-target_include_directories(hsmctl PRIVATE
+target_include_directories(hwarden PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(hsmctl 
+target_link_libraries(hwarden 
                       PRIVATE hsm
                       PRIVATE audit
                       PRIVATE common)
 
-target_compile_definitions(hsmctl PRIVATE
+target_compile_definitions(hwarden PRIVATE
     TROPIC_PKCS11_MODULE_PATH="${TROPIC_PKCS11_MODULE}"
 )
-add_dependencies(hsmctl libtropic_pkcs11)
+add_dependencies(hwarden libtropic_pkcs11)
 
-install(TARGETS hsmctl DESTINATION /usr/local/bin)
+install(TARGETS hwarden DESTINATION /usr/local/bin)
 
 # ==== Tests ====
 add_executable(test_cli

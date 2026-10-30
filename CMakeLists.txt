@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21.0)
-project(hsmctl)
+project(hardwarden)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -38,7 +38,7 @@ if(NOT DEFINED LT_GPIO_DEV_PATH)
 endif()
 
 # ==== TROPIC01 PKCS#11 module ====
-# Built separately: it brings its own libtropic. hsmctl loads it at runtime.
+# Built separately: it brings its own libtropic. hardwarden loads it at runtime.
 ExternalProject_Add(libtropic_pkcs11
     GIT_REPOSITORY https://github.com/tropicsquare/libtropic-pkcs11.git
     GIT_TAG 604cb444c1deea6a73c4300b36f468083586c6bc

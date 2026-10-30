@@ -152,7 +152,7 @@ TEST_CASE("audit logger")
 
     SECTION("invalid database")
     {
-        AuditLogger logger("/invalid/path/hsmctl.db");
+        AuditLogger logger("/invalid/path/hardwarden.db");
 
         SECTION("reading from database fails")
         {

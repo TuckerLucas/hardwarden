@@ -1,13 +1,13 @@
 import subprocess
 
-BINARY = "../build/src/cli/hsmctl"
+BINARY = "../build/src/cli/hwarden"
 
 ED25519_VALID_DATA = "hello"
-P256_VALID_DATA = "hsmctl"
+P256_VALID_DATA = "hardwarden"
 INVALID_SIGNATURE = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 
 def extract_signature_from_output(output):
-    """Extract hex signature from hsmctl sign command output.
+    """Extract hex signature from hardwarden sign command output.
     
     WARNING: This parsing depends on CliDisplay::signResult() format.
     If that format changes, this function must be updated.
