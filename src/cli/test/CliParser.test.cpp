@@ -1367,68 +1367,6 @@ TEST_CASE("CliParser parseCommand")
     }
 }
 
-// Possible commands:
-//
-// hsmctl verify --slot <valid slot> --data <data> --signature <valid signature> ✓
-// hsmctl verify --slot <valid slot> --file <valid file> --signature <valid signature> ✓
-// hsmctl verify --pubkey <valid key> --data <data> --signature <valid signature> ✓
-// hsmctl verify --pubkey <valid key> --file <valid file> --signature <valid signature> ✓
-// hsmctl verify --signature <valid signature> --file <valid file> --pubkey <valid key> ✓
-// hsmctl verify --data <data> --slot <valid slot> --signature <valid signature> ✓
-// hsmctl verify --slot <valid slot> --signature <valid signature> --file <file> ✓
-//
-// hsmctl verify ✓
-// hsmctl verify --unknown-option ✓
-//
-// hsmctl verify --help ✓
-// hsmctl verify --help unexpected-argument ✓
-//
-// hsmctl verify --slot ✓
-// hsmctl verify --pubkey ✓
-// hsmctl verify --data ✓
-// hsmctl verify --file ✓
-// hsmctl verify --signature ✓
-//
-// hsmctl verify --slot <valid slot> --slot <valid slot> ✓
-// hsmctl verify --pubkey <valid key> --pubkey <valid key> ✓
-// hsmctl verify --data <data> --data <data> ✓
-// hsmctl verify --file <valid file> --file <valid file> ✓
-// hsmctl verify --signature <valid signature> --signature <valid signature> ✓
-//
-// hsmctl verify --slot NaN ✓
-// hsmctl verify --slot <out of boundary slot> ✓
-// hsmctl verify --slot --data <data> ✓
-//
-// hsmctl verify --pubkey <non 32 or 64 byte key> ✓
-// hsmctl verify --pubkey <invalid 32 byte key> ✓
-// hsmctl verify --pubkey <invalid 64 byte key> ✓
-// hsmctl verify --pubkey --file <valid file> ✓
-//
-// hsmctl verify --data --pubkey <valid key> ✓
-//
-// hsmctl verify --file --pubkey <valid key> ✓
-//
-// hsmctl verify --signature <non 64 byte signature> ✓
-// hsmctl verify --signature <invalid 64 byte signature> ✓
-// hsmctl verify --signature --slot <valid slot> ✓
-//
-// hsmctl verify --slot <valid slot> --pubkey <valid key> ✓
-// hsmctl verify --pubkey <valid key> --slot <valid slot> ✓
-// hsmctl verify --data <data> --file <valid file> ✓
-// hsmctl verify --file <valid file> --data <data> ✓
-//
-// hsmctl verify --data <data> --signature <valid signature> ✓
-// hsmctl verify --file <valid file> --signature <valid signature> ✓
-// hsmctl verify --slot <valid slot> --signature <valid signature> ✓
-// hsmctl verify --pubkey <valid key> --signature <valid signature> ✓
-// hsmctl verify --slot <valid slot> --data <data> ✓
-// hsmctl verify --slot <valid slot> --file <valid file> ✓
-// hsmctl verify --pubkey <valid key> --data <data> ✓
-// hsmctl verify --pubkey <valid key> --file <valid file> ✓
-//
-// hsmctl verify --slot <valid slot> --data <data> --signature <valid signature> unexpected-argument
-// ✓
-//
 TEST_CASE("verify")
 {
     CliParser parser;
@@ -1450,7 +1388,6 @@ TEST_CASE("verify")
             REQUIRE(parsed_command.options["data"] == "data");
             REQUIRE(parsed_command.options["signature"] == valid_signature.c_str());
 
-            REQUIRE(parsed_command.options["pubkey"].empty());
             REQUIRE(parsed_command.options["file"].empty());
         }
 
@@ -1468,44 +1405,6 @@ TEST_CASE("verify")
             REQUIRE(parsed_command.options["file"] == "file.txt");
             REQUIRE(parsed_command.options["signature"] == valid_signature.c_str());
 
-            REQUIRE(parsed_command.options["pubkey"].empty());
-            REQUIRE(parsed_command.options["data"].empty());
-        }
-
-        SECTION("public key and data specified")
-        {
-            const char* argv[] = {"hsmctl", "verify", "--pubkey",    valid_pubkey_32_bytes.c_str(),
-                                  "--data", "data",   "--signature", valid_signature.c_str()};
-
-            auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-            REQUIRE(parsed_command.device == Device::NONE);
-            REQUIRE(parsed_command.operation == Operation::VERIFY);
-            REQUIRE(parsed_command.error == ParseError::NONE);
-            REQUIRE(parsed_command.options["pubkey"] == valid_pubkey_32_bytes.c_str());
-            REQUIRE(parsed_command.options["data"] == "data");
-            REQUIRE(parsed_command.options["signature"] == valid_signature.c_str());
-
-            REQUIRE(parsed_command.options["slot"].empty());
-            REQUIRE(parsed_command.options["file"].empty());
-        }
-
-        SECTION("public key and file specified")
-        {
-            const char* argv[] = {
-                "hsmctl", "verify",   "--pubkey",    valid_pubkey_32_bytes.c_str(),
-                "--file", "file.txt", "--signature", valid_signature.c_str()};
-
-            auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-            REQUIRE(parsed_command.device == Device::NONE);
-            REQUIRE(parsed_command.operation == Operation::VERIFY);
-            REQUIRE(parsed_command.error == ParseError::NONE);
-            REQUIRE(parsed_command.options["pubkey"] == valid_pubkey_32_bytes.c_str());
-            REQUIRE(parsed_command.options["file"] == "file.txt");
-            REQUIRE(parsed_command.options["signature"] == valid_signature.c_str());
-
-            REQUIRE(parsed_command.options["slot"].empty());
             REQUIRE(parsed_command.options["data"].empty());
         }
 
@@ -1514,21 +1413,20 @@ TEST_CASE("verify")
             // Did not test all possible order combinations
             // since it seems irrelevant to do so.
             // 3 should be enough.
-            SECTION("signature | file | public key")
+            SECTION("signature | file | slot")
             {
                 const char* argv[] = {
-                    "hsmctl", "verify",   "--signature", valid_signature.c_str(),
-                    "--file", "file.txt", "--pubkey",    valid_pubkey_32_bytes.c_str()};
+                    "hsmctl", "tropic01", "verify", "--signature", valid_signature.c_str(),
+                    "--file", "file.txt", "--slot", "25"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
                 REQUIRE(parsed_command.operation == Operation::VERIFY);
                 REQUIRE(parsed_command.error == ParseError::NONE);
-                REQUIRE(parsed_command.options["pubkey"] == valid_pubkey_32_bytes.c_str());
+                REQUIRE(parsed_command.options["slot"] == "25");
                 REQUIRE(parsed_command.options["file"] == "file.txt");
                 REQUIRE(parsed_command.options["signature"] == valid_signature.c_str());
 
-                REQUIRE(parsed_command.options["slot"].empty());
                 REQUIRE(parsed_command.options["data"].empty());
             }
 
@@ -1546,7 +1444,6 @@ TEST_CASE("verify")
                 REQUIRE(parsed_command.options["data"] == "data");
                 REQUIRE(parsed_command.options["signature"] == valid_signature.c_str());
 
-                REQUIRE(parsed_command.options["pubkey"].empty());
                 REQUIRE(parsed_command.options["file"].empty());
             }
 
@@ -1570,7 +1467,6 @@ TEST_CASE("verify")
                 REQUIRE(parsed_command.options["file"] == "file.txt");
                 REQUIRE(parsed_command.options["signature"] == valid_signature.c_str());
 
-                REQUIRE(parsed_command.options["pubkey"].empty());
                 REQUIRE(parsed_command.options["data"].empty());
             }
         }
@@ -1580,7 +1476,7 @@ TEST_CASE("verify")
     {
         SECTION("success")
         {
-            const char* argv[] = {"hsmctl", "verify", "--help"};
+            const char* argv[] = {"hsmctl", "tropic01", "verify", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1589,9 +1485,20 @@ TEST_CASE("verify")
             REQUIRE(parsed_command.requires_help);
         }
 
+        SECTION("help without device")
+        {
+            const char* argv[] = {"hsmctl", "verify", "--help"};
+
+            auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+            REQUIRE(parsed_command.operation == Operation::VERIFY);
+            REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
+            REQUIRE(parsed_command.requires_help == false);
+        }
+
         SECTION("unexpected argument")
         {
-            const char* argv[] = {"hsmctl", "verify", "--help", "unexpected-argument"};
+            const char* argv[] = {"hsmctl", "tropic01", "verify", "--help", "unexpected-argument"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1612,7 +1519,7 @@ TEST_CASE("verify")
         REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
     }
 
-    SECTION("pubkey with device")
+    SECTION("pubkey option removed")
     {
         const char* argv[] = {"hsmctl",
                               "tropic01",
@@ -1627,14 +1534,14 @@ TEST_CASE("verify")
         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
         REQUIRE(parsed_command.operation == Operation::VERIFY);
-        REQUIRE(parsed_command.error == ParseError::UNEXPECTED_DEVICE);
+        REQUIRE(parsed_command.error == ParseError::INVALID_OPTION);
     }
 
     SECTION("invalid option")
     {
         SECTION("unknown option")
         {
-            const char* argv[] = {"hsmctl", "verify", "--unknown-option"};
+            const char* argv[] = {"hsmctl", "tropic01", "verify", "--unknown-option"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1654,21 +1561,10 @@ TEST_CASE("verify")
                 REQUIRE(parsed_command.error == ParseError::INVALID_OPTION);
             }
 
-            SECTION("public key")
-            {
-                const char* argv[] = {"hsmctl",   "verify",
-                                      "--pubkey", valid_pubkey_32_bytes.c_str(),
-                                      "--pubkey", valid_pubkey_64_bytes.c_str()};
-
-                auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                REQUIRE(parsed_command.operation == Operation::VERIFY);
-                REQUIRE(parsed_command.error == ParseError::INVALID_OPTION);
-            }
-
             SECTION("data")
             {
-                const char* argv[] = {"hsmctl", "verify", "--data", "data", "--data", "more-data"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify",   "--data",
+                                      "data",   "--data",   "more-data"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1678,8 +1574,8 @@ TEST_CASE("verify")
 
             SECTION("file")
             {
-                const char* argv[] = {"hsmctl",        "verify", "--file",
-                                      "some_file.txt", "--file", "another-file.txt"};
+                const char* argv[] = {"hsmctl",        "tropic01", "verify",          "--file",
+                                      "some_file.txt", "--file",   "another-file.txt"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1689,9 +1585,13 @@ TEST_CASE("verify")
 
             SECTION("signature")
             {
-                const char* argv[] = {"hsmctl",      "verify",
-                                      "--signature", valid_signature.c_str(),
-                                      "--signature", valid_signature.c_str()};
+                const char* argv[] = {"hsmctl",
+                                      "tropic01",
+                                      "verify",
+                                      "--signature",
+                                      valid_signature.c_str(),
+                                      "--signature",
+                                      valid_signature.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1702,38 +1602,12 @@ TEST_CASE("verify")
 
         SECTION("mutually exclusive options")
         {
-            SECTION("slot and public key")
-            {
-                SECTION("slot specified first")
-                {
-                    const char* argv[] = {"hsmctl", "verify",   "--slot",
-                                          "5",      "--pubkey", valid_pubkey_32_bytes.c_str()};
-
-                    auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                    REQUIRE(parsed_command.operation == Operation::VERIFY);
-                    REQUIRE(parsed_command.error == ParseError::INVALID_OPTION);
-                }
-
-                SECTION("public key specified first")
-                {
-                    const char* argv[] = {"hsmctl",   "verify",
-                                          "--pubkey", valid_pubkey_32_bytes.c_str(),
-                                          "--slot",   "5"};
-
-                    auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                    REQUIRE(parsed_command.operation == Operation::VERIFY);
-                    REQUIRE(parsed_command.error == ParseError::INVALID_OPTION);
-                }
-            }
-
             SECTION("data and file")
             {
                 SECTION("data specified first")
                 {
-                    const char* argv[] = {"hsmctl", "verify", "--data",
-                                          "data",   "--file", "file.txt"};
+                    const char* argv[] = {"hsmctl", "tropic01", "verify",  "--data",
+                                          "data",   "--file",   "file.txt"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1743,8 +1617,8 @@ TEST_CASE("verify")
 
                 SECTION("file specified first")
                 {
-                    const char* argv[] = {"hsmctl",   "verify", "--file",
-                                          "file.txt", "--data", "data"};
+                    const char* argv[] = {"hsmctl",   "tropic01", "verify", "--file",
+                                          "file.txt", "--data",   "data"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1778,7 +1652,7 @@ TEST_CASE("verify")
     {
         SECTION("no option given")
         {
-            const char* argv[] = {"hsmctl", "verify"};
+            const char* argv[] = {"hsmctl", "tropic01", "verify"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1786,12 +1660,17 @@ TEST_CASE("verify")
             REQUIRE(parsed_command.error == ParseError::MISSING_OPTION);
         }
 
-        SECTION("missing slot / public key")
+        SECTION("missing slot")
         {
             SECTION("data specified")
             {
-                const char* argv[] = {"hsmctl", "verify",      "--data",
-                                      "data",   "--signature", valid_signature.c_str()};
+                const char* argv[] = {"hsmctl",
+                                      "tropic01",
+                                      "verify",
+                                      "--data",
+                                      "data",
+                                      "--signature",
+                                      valid_signature.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1801,8 +1680,13 @@ TEST_CASE("verify")
 
             SECTION("file specified")
             {
-                const char* argv[] = {"hsmctl",   "verify",      "--file",
-                                      "file.txt", "--signature", valid_signature.c_str()};
+                const char* argv[] = {"hsmctl",
+                                      "tropic01",
+                                      "verify",
+                                      "--file",
+                                      "file.txt",
+                                      "--signature",
+                                      valid_signature.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1828,18 +1712,6 @@ TEST_CASE("verify")
                 REQUIRE(parsed_command.operation == Operation::VERIFY);
                 REQUIRE(parsed_command.error == ParseError::MISSING_OPTION);
             }
-
-            SECTION("public key specified")
-            {
-                const char* argv[] = {"hsmctl",      "verify",
-                                      "--pubkey",    valid_pubkey_32_bytes.c_str(),
-                                      "--signature", valid_signature.c_str()};
-
-                auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                REQUIRE(parsed_command.operation == Operation::VERIFY);
-                REQUIRE(parsed_command.error == ParseError::MISSING_OPTION);
-            }
         }
 
         SECTION("missing signature")
@@ -1859,29 +1731,6 @@ TEST_CASE("verify")
             {
                 const char* argv[] = {"hsmctl", "tropic01", "verify",  "--slot",
                                       "15",     "--file",   "file.txt"};
-
-                auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                REQUIRE(parsed_command.operation == Operation::VERIFY);
-                REQUIRE(parsed_command.error == ParseError::MISSING_OPTION);
-            }
-
-            SECTION("public key and data specified")
-            {
-                const char* argv[] = {"hsmctl", "verify", "--pubkey", valid_pubkey_32_bytes.c_str(),
-                                      "--data", "data"};
-
-                auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                REQUIRE(parsed_command.operation == Operation::VERIFY);
-                REQUIRE(parsed_command.error == ParseError::MISSING_OPTION);
-            }
-
-            SECTION("public key and file specified")
-            {
-                const char* argv[] = {"hsmctl",   "verify",
-                                      "--pubkey", valid_pubkey_32_bytes.c_str(),
-                                      "--file",   "file.txt"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1916,34 +1765,11 @@ TEST_CASE("verify")
             }
         }
 
-        SECTION("public key")
-        {
-            SECTION("other options not specified")
-            {
-                const char* argv[] = {"hsmctl", "verify", "--pubkey"};
-
-                auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                REQUIRE(parsed_command.operation == Operation::VERIFY);
-                REQUIRE(parsed_command.error == ParseError::MISSING_VALUE);
-            }
-
-            SECTION("other options specified")
-            {
-                const char* argv[] = {"hsmctl", "verify", "--pubkey", "--file", "file.txt"};
-
-                auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                REQUIRE(parsed_command.operation == Operation::VERIFY);
-                REQUIRE(parsed_command.error == ParseError::MISSING_VALUE);
-            }
-        }
-
         SECTION("data")
         {
             SECTION("other options not specified")
             {
-                const char* argv[] = {"hsmctl", "verify", "--data"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--data"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1953,8 +1779,7 @@ TEST_CASE("verify")
 
             SECTION("other options specified")
             {
-                const char* argv[] = {"hsmctl", "verify", "--data", "--pubkey",
-                                      valid_pubkey_32_bytes.c_str()};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--data", "--slot", "5"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1967,7 +1792,7 @@ TEST_CASE("verify")
         {
             SECTION("other options not specified")
             {
-                const char* argv[] = {"hsmctl", "verify", "--file"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--file"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1990,7 +1815,7 @@ TEST_CASE("verify")
         {
             SECTION("other options not specified")
             {
-                const char* argv[] = {"hsmctl", "verify", "--signature"};
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--signature"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -2000,7 +1825,8 @@ TEST_CASE("verify")
 
             SECTION("other options specified")
             {
-                const char* argv[] = {"hsmctl", "verify", "--signature", "--data", "some-data"};
+                const char* argv[] = {"hsmctl",      "tropic01", "verify",
+                                      "--signature", "--data",   "some-data"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -2037,50 +1863,11 @@ TEST_CASE("verify")
             }
         }
 
-        SECTION("public key")
-        {
-            SECTION("invalid key length")
-            {
-                const char* argv[] = {"hsmctl", "verify", "--pubkey",
-                                      invalid_pubkey_33_bytes.c_str()};
-
-                auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                REQUIRE(parsed_command.operation == Operation::VERIFY);
-                REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
-            }
-
-            SECTION("invalid key content")
-            {
-                SECTION("32 byte key")
-                {
-                    const char* argv[] = {"hsmctl", "verify", "--pubkey",
-                                          invalid_pubkey_32_bytes.c_str()};
-
-                    auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                    REQUIRE(parsed_command.operation == Operation::VERIFY);
-                    REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
-                }
-
-                SECTION("64 byte key")
-                {
-                    const char* argv[] = {"hsmctl", "verify", "--pubkey",
-                                          invalid_pubkey_64_bytes.c_str()};
-
-                    auto parsed_command = parser.parseCommand(std::size(argv), argv);
-
-                    REQUIRE(parsed_command.operation == Operation::VERIFY);
-                    REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
-                }
-            }
-        }
-
         SECTION("signature")
         {
             SECTION("invalid signature length")
             {
-                const char* argv[] = {"hsmctl", "verify", "--signature",
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--signature",
                                       invalid_signature_65_bytes.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
@@ -2091,7 +1878,7 @@ TEST_CASE("verify")
 
             SECTION("invalid signature content")
             {
-                const char* argv[] = {"hsmctl", "verify", "--signature",
+                const char* argv[] = {"hsmctl", "tropic01", "verify", "--signature",
                                       invalid_signature_64_bytes.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
