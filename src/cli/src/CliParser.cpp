@@ -183,32 +183,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
 
     if (operation == "list-keys")
     {
-        command.operation = Operation::LIST_KEYS;
-
-        if (command.device == DeviceType::NONE)
-        {
-            command.error = ParseError::MISSING_DEVICE;
-            return command;
-        }
-
-        if (argc == 3 && std::string(argv[2]) == "--help")
-        {
-            command.requires_help = true;
-            return command;
-        }
-
-        if (argc > 2)
-        {
-            if (argc == 3 && std::string(argv[2]) == "--verbose")
-            {
-                command.options["verbose"] = "true";
-            }
-            else
-            {
-                command.error = ParseError::INVALID_OPTION;
-            }
-        }
-
+        parseListKeys(command, options);
         return command;
     }
 
@@ -626,5 +601,33 @@ bool CliParser::parseSlotValue(Command& command, const std::string& value)
     {
         command.error = ParseError::INVALID_VALUE;
         return false;
+    }
+}
+
+void CliParser::parseListKeys(Command& command, const std::vector<std::string>& options)
+{
+    command.operation = Operation::LIST_KEYS;
+
+    if (command.device == DeviceType::NONE)
+    {
+        command.error = ParseError::MISSING_DEVICE;
+        return;
+    }
+
+    if (options == std::vector<std::string>{"--help"})
+    {
+        command.requires_help = true;
+        return;
+    }
+
+    if (options == std::vector<std::string>{"--verbose"})
+    {
+        command.options["verbose"] = "true";
+        return;
+    }
+
+    if (!options.empty())
+    {
+        command.error = ParseError::INVALID_OPTION;
     }
 }

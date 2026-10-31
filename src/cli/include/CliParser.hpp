@@ -21,4 +21,5 @@ private:
     void parseLogs(Command& command, const std::vector<std::string>& options);
     void parseSlotOperation(Command& command, const std::vector<std::string>& options);
     bool parseSlotValue(Command& command, const std::string& value);
+    void parseListKeys(Command& command, const std::vector<std::string>& options);
 };
