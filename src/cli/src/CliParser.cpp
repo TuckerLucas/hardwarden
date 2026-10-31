@@ -230,7 +230,9 @@ bool CliParser::parseSlotValue(Command& command, const std::string& value)
     {
         unsigned long slot = std::stoul(value);
 
-        if (slot < MIN_SLOT || slot > MAX_SLOT)
+        SlotRange range = slotRange(command.device);
+
+        if (slot < range.min || slot > range.max)
         {
             command.error = ParseError::INVALID_VALUE;
             return false;

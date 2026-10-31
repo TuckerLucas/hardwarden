@@ -220,7 +220,7 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("lower boundary")
                 {
-                    std::string min_slot_str = std::to_string(MIN_SLOT);
+                    std::string min_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).min);
                     const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot",
                                           min_slot_str.c_str()};
 
@@ -234,7 +234,7 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("upper boundary")
                 {
-                    std::string max_slot_str = std::to_string(MAX_SLOT);
+                    std::string max_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).max);
                     const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot",
                                           max_slot_str.c_str()};
 
@@ -440,7 +440,7 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("lower boundary")
                 {
-                    std::string min_slot_str = std::to_string(MIN_SLOT);
+                    std::string min_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).min);
                     const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot",
                                           min_slot_str.c_str()};
 
@@ -454,7 +454,7 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("upper boundary")
                 {
-                    std::string max_slot_str = std::to_string(MAX_SLOT);
+                    std::string max_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).max);
                     const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot",
                                           max_slot_str.c_str()};
 
@@ -683,7 +683,7 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("lower boundary")
                 {
-                    std::string min_slot_str = std::to_string(MIN_SLOT);
+                    std::string min_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).min);
                     const char* argv[] = {"hwarden", "tropic01", "read-key", "--slot",
                                           min_slot_str.c_str()};
 
@@ -697,7 +697,7 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("upper boundary")
                 {
-                    std::string max_slot_str = std::to_string(MAX_SLOT);
+                    std::string max_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).max);
                     const char* argv[] = {"hwarden", "tropic01", "read-key", "--slot",
                                           max_slot_str.c_str()};
 

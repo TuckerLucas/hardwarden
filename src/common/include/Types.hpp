@@ -29,6 +29,24 @@ enum class DeviceType
     NONE,
 };
 
+struct SlotRange
+{
+    unsigned int min;
+    unsigned int max;
+};
+
+inline SlotRange slotRange(DeviceType device)
+{
+    switch (device)
+    {
+        case DeviceType::TROPIC01:
+            return {0, 31};
+        default:
+            assert(false && "Unhandled device value in slotRange()");
+            return {0, 0};
+    }
+}
+
 enum class DataSource
 {
     DATA,
