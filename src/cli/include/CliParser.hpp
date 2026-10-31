@@ -22,4 +22,6 @@ private:
     void parseSlotOperation(Command& command, const std::vector<std::string>& options);
     bool parseSlotValue(Command& command, const std::string& value);
     void parseListKeys(Command& command, const std::vector<std::string>& options);
+    void parseGenerateKey(Command& command, const std::vector<std::string>& options);
+    static bool hasValue(const std::vector<std::string>& options, size_t i);
 };

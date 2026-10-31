@@ -55,122 +55,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
 
     if (operation == "generate-key")
     {
-        command.operation = Operation::GENERATE_KEY;
-
-        if (command.device == DeviceType::NONE)
-        {
-            command.error = ParseError::MISSING_DEVICE;
-            return command;
-        }
-
-        bool slot_option_used = false;
-        bool curve_option_used = false;
-        command.options["curve"] = "ed25519";
-
-        if (argc < 3)
-        {
-            command.error = ParseError::MISSING_OPTION;
-            return command;
-        }
-
-        for (int i = 2; i < argc; i++)
-        {
-            std::string arg = argv[i];
-
-            if (arg == "--help")
-            {
-                if (argc != 3)
-                {
-                    command.error = ParseError::INVALID_OPTION;
-                    return command;
-                }
-
-                command.requires_help = true;
-                return command;
-            }
-            else if (arg == "--slot")
-            {
-                if (slot_option_used)
-                {
-                    command.error = ParseError::INVALID_OPTION;
-                    return command;
-                }
-
-                slot_option_used = true;
-
-                // If the next command line argument does not exist or is an option
-                if (i + 1 >= argc || std::string(argv[i + 1]).substr(0, 2) == "--")
-                {
-                    command.error = ParseError::MISSING_VALUE;
-                    return command;
-                }
-
-                i++;
-
-                try
-                {
-                    u_int8_t slot = std::stoi(argv[i]);
-
-                    if (slot < MIN_SLOT || slot > MAX_SLOT)
-                    {
-                        command.error = ParseError::INVALID_VALUE;
-                        return command;
-                    }
-
-                    command.options["slot"] = std::string(argv[i]);
-                }
-                catch (const std::invalid_argument&)
-                {
-                    command.error = ParseError::INVALID_VALUE;
-                    return command;
-                }
-            }
-            else if (arg == "--curve")
-            {
-                if (curve_option_used)
-                {
-                    command.error = ParseError::INVALID_OPTION;
-                    return command;
-                }
-
-                curve_option_used = true;
-
-                // If the next command line argument does not exist or is an option
-                if (i + 1 >= argc || std::string(argv[i + 1]).substr(0, 2) == "--")
-                {
-                    command.error = ParseError::MISSING_VALUE;
-                    return command;
-                }
-
-                i++;
-
-                if (std::string(argv[i]) == "ed25519")
-                {
-                    command.options["curve"] = "ed25519";
-                }
-                else if (std::string(argv[i]) == "p256")
-                {
-                    command.options["curve"] = "p256";
-                }
-                else
-                {
-                    command.error = ParseError::INVALID_VALUE;
-                    return command;
-                }
-            }
-            else
-            {
-                command.error = ParseError::INVALID_OPTION;
-                return command;
-            }
-        }
-
-        if (slot_option_used == false)
-        {
-            command.error = ParseError::MISSING_OPTION;
-            return command;
-        }
-
+        parseGenerateKey(command, options);
         return command;
     }
 
@@ -629,5 +514,110 @@ void CliParser::parseListKeys(Command& command, const std::vector<std::string>& 
     if (!options.empty())
     {
         command.error = ParseError::INVALID_OPTION;
+    }
+}
+
+// True if the option at index i is followed by a value (an argument not starting with "--").
+bool CliParser::hasValue(const std::vector<std::string>& options, size_t i)
+{
+    return i + 1 < options.size() && options[i + 1].substr(0, 2) != "--";
+}
+
+void CliParser::parseGenerateKey(Command& command, const std::vector<std::string>& options)
+{
+    command.operation = Operation::GENERATE_KEY;
+
+    if (command.device == DeviceType::NONE)
+    {
+        command.error = ParseError::MISSING_DEVICE;
+        return;
+    }
+
+    bool slot_option_used = false;
+    bool curve_option_used = false;
+    command.options["curve"] = "ed25519";
+
+    if (options.empty())
+    {
+        command.error = ParseError::MISSING_OPTION;
+        return;
+    }
+
+    for (size_t i = 0; i < options.size(); i++)
+    {
+        const std::string& arg = options[i];
+
+        if (arg == "--help")
+        {
+            if (options.size() != 1)
+            {
+                command.error = ParseError::INVALID_OPTION;
+                return;
+            }
+
+            command.requires_help = true;
+            return;
+        }
+        else if (arg == "--slot")
+        {
+            if (slot_option_used)
+            {
+                command.error = ParseError::INVALID_OPTION;
+                return;
+            }
+
+            slot_option_used = true;
+
+            if (!hasValue(options, i))
+            {
+                command.error = ParseError::MISSING_VALUE;
+                return;
+            }
+
+            i++;
+
+            if (!parseSlotValue(command, options[i]))
+            {
+                return;
+            }
+        }
+        else if (arg == "--curve")
+        {
+            if (curve_option_used)
+            {
+                command.error = ParseError::INVALID_OPTION;
+                return;
+            }
+
+            curve_option_used = true;
+
+            if (!hasValue(options, i))
+            {
+                command.error = ParseError::MISSING_VALUE;
+                return;
+            }
+
+            i++;
+
+            if (options[i] == "ed25519" || options[i] == "p256")
+            {
+                command.options["curve"] = options[i];
+            }
+            else
+            {
+                command.error = ParseError::INVALID_VALUE;
+                return;
+            }
+        }
+        else
+        {
+            command.error = ParseError::INVALID_OPTION;
+            return;
+        }
+    }
+
+    if (!slot_option_used)
+    {
+        command.error = ParseError::MISSING_OPTION;
     }
 }
