@@ -148,6 +148,30 @@ TEST_CASE("audit logger")
                 REQUIRE(entries[2].options == "slot=15 curve=ed25519");
             }
         }
+
+        SECTION("options containing quotes are stored verbatim")
+        {
+            std::string options = "type=file path=John's file.pdf";
+
+            REQUIRE(logger.log(Operation::SIGN, SystemStatus::OK, options) == SystemStatus::OK);
+
+            std::vector<AuditEntry> entries;
+            REQUIRE(logger.fetch(entries) == SystemStatus::OK);
+            REQUIRE(entries.size() == 1);
+            REQUIRE(entries[0].options == options);
+        }
+
+        SECTION("options cannot inject SQL")
+        {
+            std::string options = "path=x'); DROP TABLE audit_log; --";
+
+            logger.log(Operation::SIGN, SystemStatus::OK, options);
+
+            std::vector<AuditEntry> entries;
+            REQUIRE(logger.fetch(entries) == SystemStatus::OK);
+            REQUIRE(entries.size() == 1);
+            REQUIRE(entries[0].options == options);
+        }
     }
 
     SECTION("invalid database")

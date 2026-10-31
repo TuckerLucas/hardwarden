@@ -75,10 +75,25 @@ SystemStatus AuditLogger::log(Operation operation, SystemStatus auditResult, std
     std::string op_str = operationToString(operation);
     std::string audit_res_str = (auditResult == SystemStatus::OK) ? "SUCCESS" : "FAILED";
 
-    std::string sql = "INSERT INTO audit_log (operation, auditResult, options) VALUES ('" + op_str +
-                      "', '" + audit_res_str + "', '" + options + "');";
+    // Values are bound, never concatenated into the SQL: user input (e.g. file paths) cannot
+    // break or inject statements.
+    const char* sql = "INSERT INTO audit_log (operation, auditResult, options) VALUES (?, ?, ?);";
+    sqlite3_stmt* stmt = nullptr;
 
-    if (sqlite3_exec(m_db, sql.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK)
+    if (sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        return SystemStatus::AUDIT_ERROR_DB_WRITE;
+    }
+
+    bool bound =
+        sqlite3_bind_text(stmt, 1, op_str.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK &&
+        sqlite3_bind_text(stmt, 2, audit_res_str.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK &&
+        sqlite3_bind_text(stmt, 3, options.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK;
+
+    int rc = bound ? sqlite3_step(stmt) : SQLITE_ERROR;
+    sqlite3_finalize(stmt);
+
+    if (rc != SQLITE_DONE)
     {
         // TODO: Implement database mock to test this line
         return SystemStatus::AUDIT_ERROR_DB_WRITE;
