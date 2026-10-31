@@ -5,9 +5,6 @@
 
 #include "Types.hpp"
 
-#define MIN_SLOT 0
-#define MAX_SLOT 31
-
 enum class ParseError
 {
     MISSING_DEVICE,
