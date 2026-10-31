@@ -3,6 +3,16 @@
 #include <cassert>
 #include <iomanip>
 
+namespace
+{
+std::string slotRangeText(DeviceType device)
+{
+    SlotRange range = slotRange(device);
+
+    return "<" + std::to_string(range.min) + "-" + std::to_string(range.max) + ">";
+}
+}  // namespace
+
 void CliDisplay::helpMenu()
 {
     std::cout << "hwarden <device> <operation> [options]\n";
@@ -50,7 +60,8 @@ void CliDisplay::deviceHelpMenu(DeviceType device)
             std::cout << "\n";
             std::cout << "Tropic Square TROPIC01 secure element.\n";
             std::cout << "\n";
-            std::cout << "        Key slots:   0-31\n";
+            std::cout << "        Key slots:   " << slotRange(device).min << "-"
+                      << slotRange(device).max << "\n";
             std::cout << "        Curves:      ed25519, p256\n";
             std::cout << "\n";
             std::cout << "        Operations:  status, erase-key, generate-key, read-key, "
@@ -449,7 +460,7 @@ void CliDisplay::logs_help()
     std::cout << "        hwarden logs\n";
 }
 
-void CliDisplay::eraseKey_help()
+void CliDisplay::eraseKey_help(DeviceType device)
 {
     std::cout << "Usage:\n";
     std::cout << "        hwarden <device> erase-key --slot <slot>\n";
@@ -458,15 +469,14 @@ void CliDisplay::eraseKey_help()
     std::cout << "        Erases the key stored in the specified slot on the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
-    std::cout << "        --slot <" << MIN_SLOT << ", " << MAX_SLOT
-              << ">    Slot number to erase.\n";
+    std::cout << "        --slot " << slotRangeText(device) << "   Slot number to erase.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
     std::cout << "        hwarden tropic01 erase-key --slot 0\n";
     std::cout << "        hwarden tropic01 erase-key --slot 28\n";
 }
 
-void CliDisplay::generateKey_help()
+void CliDisplay::generateKey_help(DeviceType device)
 {
     std::cout << "Usage:\n";
     std::cout << "        hwarden <device> generate-key --slot <slot>\n";
@@ -475,8 +485,8 @@ void CliDisplay::generateKey_help()
     std::cout << "        Generates an ECC key pair in the specified slot on the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
-    std::cout << "        --slot  <" << MIN_SLOT << ", " << MAX_SLOT
-              << ">   Slot number to erase.\n";
+    std::cout << "        --slot  " << slotRangeText(device)
+              << "    Slot to generate the key in.\n";
     std::cout << "        --curve <curve>   Curve to use for key generation\n";
     std::cout << "                          ed25519   Edwards curve (default)\n";
     std::cout << "                          p256      NIST P-256 curve\n";
@@ -488,7 +498,7 @@ void CliDisplay::generateKey_help()
     std::cout << "        hwarden tropic01 generate-key --curve p256 --slot 3\n";
 }
 
-void CliDisplay::readKey_help()
+void CliDisplay::readKey_help(DeviceType device)
 {
     std::cout << "Usage:\n";
     std::cout << "        hwarden <device> read-key --slot <slot>\n";
@@ -497,8 +507,8 @@ void CliDisplay::readKey_help()
     std::cout << "        Reads the public key stored in the specified slot on the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
-    std::cout << "        --slot <" << MIN_SLOT << ", " << MAX_SLOT
-              << ">    Slot number to erase.\n";
+    std::cout << "        --slot " << slotRangeText(device)
+              << "   Slot to read the public key from.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
     std::cout << "        hwarden tropic01 read-key --slot 2\n";
@@ -521,7 +531,7 @@ void CliDisplay::listKeys_help()
     std::cout << "        hwarden tropic01 list-keys --verbose\n";
 }
 
-void CliDisplay::sign_help()
+void CliDisplay::sign_help(DeviceType device)
 {
     std::cout << "Usage:\n";
     std::cout << "        hwarden <device> sign --slot <slot> --data <data>\n";
@@ -533,7 +543,8 @@ void CliDisplay::sign_help()
     std::cout << "        The private key never leaves the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
-    std::cout << "        --slot <0-31>   Slot containing the key to sign with (required).\n";
+    std::cout << "        --slot " << slotRangeText(device)
+              << "   Slot containing the key to sign with (required).\n";
     std::cout << "        --data <data>   Data string to sign (mutually exclusive with --file).\n";
     std::cout << "        --file <path>   Path to file to sign (mutually exclusive with --data).\n";
     std::cout << "\n";
@@ -544,7 +555,7 @@ void CliDisplay::sign_help()
     std::cout << "        hwarden tropic01 sign --file document.pdf --slot 12\n";
 }
 
-void CliDisplay::verify_help()
+void CliDisplay::verify_help(DeviceType device)
 {
     std::cout << "Usage:\n";
     std::cout << "        hwarden <device> verify --slot <slot> --data <data> --signature <hex>\n";
@@ -555,7 +566,8 @@ void CliDisplay::verify_help()
     std::cout << "        the specified slot.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
-    std::cout << "        --slot <0-31>      Slot containing the public key (required).\n";
+    std::cout << "        --slot " << slotRangeText(device)
+              << "      Slot containing the public key (required).\n";
     std::cout
         << "        --data <data>      Data that was signed (mutually exclusive with --file).\n";
     std::cout << "        --file <path>      Path to file that was signed (mutually exclusive with "
@@ -569,7 +581,7 @@ void CliDisplay::verify_help()
                  "ab12cd34...\n";
 }
 
-void CliDisplay::operationHelpMenu(Operation op)
+void CliDisplay::operationHelpMenu(Operation op, DeviceType device)
 {
     switch (op)
     {
@@ -580,22 +592,22 @@ void CliDisplay::operationHelpMenu(Operation op)
             logs_help();
             break;
         case Operation::ERASE_KEY:
-            eraseKey_help();
+            eraseKey_help(device);
             break;
         case Operation::GENERATE_KEY:
-            generateKey_help();
+            generateKey_help(device);
             break;
         case Operation::READ_KEY:
-            readKey_help();
+            readKey_help(device);
             break;
         case Operation::LIST_KEYS:
             listKeys_help();
             break;
         case Operation::SIGN:
-            sign_help();
+            sign_help(device);
             break;
         case Operation::VERIFY:
-            verify_help();
+            verify_help(device);
             break;
         default:
             assert(false && "Unhandled operation value in operationHelpMenu");

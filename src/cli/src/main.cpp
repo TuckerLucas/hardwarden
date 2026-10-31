@@ -39,7 +39,7 @@ int main(int argc, const char* argv[])
 
     if (command.requires_help)
     {
-        display.operationHelpMenu(command.operation);
+        display.operationHelpMenu(command.operation, command.device);
         return 0;
     }
 

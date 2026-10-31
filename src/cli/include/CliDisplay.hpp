@@ -26,14 +26,14 @@ public:
     void verifyResult(SystemStatus result);
 
     // operation specific help menu functions
-    void operationHelpMenu(Operation op);
+    void operationHelpMenu(Operation op, DeviceType device);
 
     void status_help();
     void logs_help();
-    void eraseKey_help();
-    void generateKey_help();
-    void readKey_help();
+    void eraseKey_help(DeviceType device);
+    void generateKey_help(DeviceType device);
+    void readKey_help(DeviceType device);
     void listKeys_help();
-    void sign_help();
-    void verify_help();
+    void sign_help(DeviceType device);
+    void verify_help(DeviceType device);
 };
