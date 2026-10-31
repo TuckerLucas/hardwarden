@@ -25,4 +25,5 @@ private:
     void parseGenerateKey(Command& command, const std::vector<std::string>& options);
     static bool hasValue(const std::vector<std::string>& options, size_t i);
     void parseSign(Command& command, const std::vector<std::string>& options);
+    void parseVerify(Command& command, const std::vector<std::string>& options);
 };
