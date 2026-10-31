@@ -1,32 +1,54 @@
 #include "CliParser.hpp"
 
 #include <iostream>
+#include <unordered_map>
+
+namespace
+{
+const std::unordered_map<std::string, DeviceType> DEVICES = {
+    {"tropic01", DeviceType::TROPIC01},
+};
+}
 
 Command CliParser::parseCommand(int argc, const char* argv[])
 {
     Command command;
 
-    if (argc >= 2 && std::string(argv[1]) == "tropic01")
+    std::vector<std::string> args;
+
+    if (argc > 1)
     {
-        command.device = DeviceType::TROPIC01;
-        argc--;
-        argv++;
+        // Skip the program name.
+        args.assign(argv + 1, argv + argc);
     }
 
-    if (argc < 2)
+    size_t next = 0;
+
+    if (next < args.size())
+    {
+        auto device = DEVICES.find(args[next]);
+
+        if (device != DEVICES.end())
+        {
+            command.device = device->second;
+            next++;
+        }
+    }
+
+    if (next >= args.size())
     {
         command.error = ParseError::MISSING_OPERATION;
         return command;
     }
 
-    std::string operation = std::string(argv[1]);
-    std::vector<std::string> options(argv + 2, argv + argc);
+    const std::string& operation = args[next];
+    std::vector<std::string> options(args.begin() + next + 1, args.end());
 
     if (operation == "--help")
     {
         command.operation = Operation::HELP;
 
-        if (argc > 2)
+        if (!options.empty())
         {
             command.error = ParseError::INVALID_OPTION;
         }
