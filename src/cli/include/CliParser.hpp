@@ -19,6 +19,6 @@ private:
 
     void parseStatus(Command& command, const std::vector<std::string>& options);
     void parseLogs(Command& command, const std::vector<std::string>& options);
-    void parseEraseKey(Command& command, const std::vector<std::string>& options);
+    void parseSlotOperation(Command& command, const std::vector<std::string>& options);
     bool parseSlotValue(Command& command, const std::string& value);
 };
