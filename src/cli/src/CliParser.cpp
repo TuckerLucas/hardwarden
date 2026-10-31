@@ -219,24 +219,31 @@ void CliParser::parseSlotOperation(Command& command, const std::vector<std::stri
 
 bool CliParser::parseSlotValue(Command& command, const std::string& value)
 {
+    // Digits only: rejects "3abc", "-1", "+3", " 3" and "", which std::stoul would partly accept.
+    if (value.empty() || value.find_first_not_of("0123456789") != std::string::npos)
+    {
+        command.error = ParseError::INVALID_VALUE;
+        return false;
+    }
+
     try
     {
-        u_int8_t slot = std::stoi(value);
+        unsigned long slot = std::stoul(value);
 
         if (slot < MIN_SLOT || slot > MAX_SLOT)
         {
             command.error = ParseError::INVALID_VALUE;
             return false;
         }
-
-        command.options["slot"] = value;
-        return true;
     }
-    catch (const std::invalid_argument&)
+    catch (const std::out_of_range&)
     {
         command.error = ParseError::INVALID_VALUE;
         return false;
     }
+
+    command.options["slot"] = value;
+    return true;
 }
 
 void CliParser::parseListKeys(Command& command, const std::vector<std::string>& options)

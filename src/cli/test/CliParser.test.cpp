@@ -343,6 +343,33 @@ TEST_CASE("CliParser parseCommand")
                 REQUIRE(parsed_command.operation == Operation::ERASE_KEY);
                 REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
             }
+
+            SECTION("number with trailing characters")
+            {
+                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot", "3abc"};
+
+                auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+                REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
+            }
+
+            SECTION("wraps around 8 bits")
+            {
+                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot", "256"};
+
+                auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+                REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
+            }
+
+            SECTION("too large for int")
+            {
+                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot", "99999999999"};
+
+                auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+                REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
+            }
         }
     }
 
