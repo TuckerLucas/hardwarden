@@ -6,13 +6,13 @@
 
 #include "AuditTypes.hpp"
 #include "CliTypes.hpp"
-#include "IHsm.hpp"
+#include "IDevice.hpp"
 
 class CliDisplay
 {
 public:
     void helpMenu();
-    void deviceHelpMenu(Device device);
+    void deviceHelpMenu(DeviceType device);
     void commandError(Command command);
 
     void statusResult(SystemStatus result);

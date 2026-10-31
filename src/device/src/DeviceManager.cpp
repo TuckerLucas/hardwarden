@@ -1,10 +1,10 @@
-#include "HsmManager.hpp"
+#include "DeviceManager.hpp"
 
-HsmManager::HsmManager(IHsm& se, IAuditLogger& logger) : m_se(se), m_logger(logger)
+DeviceManager::DeviceManager(IDevice& se, IAuditLogger& logger) : m_se(se), m_logger(logger)
 {
 }
 
-SystemStatus HsmManager::status()
+SystemStatus DeviceManager::status()
 {
     SystemStatus result;
     Operation operation = Operation::STATUS;
@@ -32,7 +32,7 @@ SystemStatus HsmManager::status()
     return result;
 }
 
-SystemStatus HsmManager::eraseKey(uint8_t slot)
+SystemStatus DeviceManager::eraseKey(uint8_t slot)
 {
     SystemStatus result;
     Operation operation = Operation::ERASE_KEY;
@@ -60,7 +60,7 @@ SystemStatus HsmManager::eraseKey(uint8_t slot)
     return result;
 }
 
-SystemStatus HsmManager::generateKey(uint8_t slot, Curve curve)
+SystemStatus DeviceManager::generateKey(uint8_t slot, Curve curve)
 {
     SystemStatus result;
     Operation operation = Operation::GENERATE_KEY;
@@ -90,7 +90,7 @@ SystemStatus HsmManager::generateKey(uint8_t slot, Curve curve)
     return result;
 }
 
-SystemStatus HsmManager::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
+SystemStatus DeviceManager::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
 {
     SystemStatus result;
     std::string options = "slot=" + std::to_string(slot);
@@ -117,7 +117,7 @@ SystemStatus HsmManager::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
     return result;
 }
 
-SystemStatus HsmManager::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
+SystemStatus DeviceManager::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
 {
     SystemStatus result;
     std::string options = "";
@@ -144,9 +144,9 @@ SystemStatus HsmManager::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
     return result;
 }
 
-SystemStatus HsmManager::sign(uint8_t slot, std::vector<uint8_t> payload,
-                              std::vector<uint8_t>& signature, DataSource dataSource,
-                              std::string filepath)
+SystemStatus DeviceManager::sign(uint8_t slot, std::vector<uint8_t> payload,
+                                 std::vector<uint8_t>& signature, DataSource dataSource,
+                                 std::string filepath)
 {
     SystemStatus result;
     std::string options = "slot=" + std::to_string(slot) + (slot < 10 ? "  " : " ") +
@@ -179,8 +179,8 @@ SystemStatus HsmManager::sign(uint8_t slot, std::vector<uint8_t> payload,
 
     if (curve == Curve::Ed25519 && payload.size() > ED25519_MAX_MSG_SIZE)
     {
-        m_logger.log(Operation::SIGN, SystemStatus::HSM_ERROR_SIGN_PAYLOAD_TOO_LARGE, options);
-        return SystemStatus::HSM_ERROR_SIGN_PAYLOAD_TOO_LARGE;
+        m_logger.log(Operation::SIGN, SystemStatus::DEVICE_ERROR_SIGN_PAYLOAD_TOO_LARGE, options);
+        return SystemStatus::DEVICE_ERROR_SIGN_PAYLOAD_TOO_LARGE;
     }
 
     result = m_se.sign(slot, curve, payload, signature);
@@ -203,9 +203,9 @@ SystemStatus HsmManager::sign(uint8_t slot, std::vector<uint8_t> payload,
     return result;
 }
 
-SystemStatus HsmManager::verifyWithHsmKey(uint8_t slot, std::vector<uint8_t> payload,
-                                          std::vector<uint8_t> signature, DataSource dataSource,
-                                          std::string filepath)
+SystemStatus DeviceManager::verify(uint8_t slot, std::vector<uint8_t> payload,
+                                   std::vector<uint8_t> signature, DataSource dataSource,
+                                   std::string filepath)
 {
     SystemStatus result;
     std::string options = "slot=" + std::to_string(slot) + (slot < 10 ? "  " : " ") +

@@ -60,8 +60,8 @@ TEST_CASE("audit logger")
                 SECTION("generate key")
                 {
                     auto write_result = logger.log(
-                        Operation::GENERATE_KEY, SystemStatus::HSM_ERROR_GENERATE_KEY_SLOT_OCCUPIED,
-                        "slot=2 curve=p256");
+                        Operation::GENERATE_KEY,
+                        SystemStatus::DEVICE_ERROR_GENERATE_KEY_SLOT_OCCUPIED, "slot=2 curve=p256");
 
                     REQUIRE(write_result == SystemStatus::OK);
 
@@ -78,8 +78,8 @@ TEST_CASE("audit logger")
 
                 SECTION("read key")
                 {
-                    auto write_result =
-                        logger.log(Operation::READ_KEY, SystemStatus::HSM_ERROR_DEINIT, "slot=2");
+                    auto write_result = logger.log(Operation::READ_KEY,
+                                                   SystemStatus::DEVICE_ERROR_DEINIT, "slot=2");
 
                     REQUIRE(write_result == SystemStatus::OK);
 
@@ -97,7 +97,7 @@ TEST_CASE("audit logger")
                 SECTION("list all keys")
                 {
                     auto write_result =
-                        logger.log(Operation::LIST_KEYS, SystemStatus::HSM_ERROR_DEINIT, "");
+                        logger.log(Operation::LIST_KEYS, SystemStatus::DEVICE_ERROR_DEINIT, "");
 
                     REQUIRE(write_result == SystemStatus::OK);
 

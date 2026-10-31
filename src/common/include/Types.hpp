@@ -22,7 +22,7 @@ enum class Operation
     NONE,
 };
 
-enum class Device
+enum class DeviceType
 {
     TROPIC01,
 

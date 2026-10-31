@@ -1,4 +1,4 @@
-#include "Pkcs11Hsm.hpp"
+#include "Pkcs11Device.hpp"
 
 #include <dlfcn.h>
 #include <openssl/bn.h>
@@ -8,17 +8,17 @@
 #include <cstring>
 #include <vector>
 
-Pkcs11Hsm::Pkcs11Hsm(std::string modulePath) : m_modulePath(std::move(modulePath))
+Pkcs11Device::Pkcs11Device(std::string modulePath) : m_modulePath(std::move(modulePath))
 {
 }
 
-Pkcs11Hsm::~Pkcs11Hsm()
+Pkcs11Device::~Pkcs11Device()
 {
     deinit();
 }
 
-CK_RV Pkcs11Hsm::findObjects(CK_OBJECT_CLASS objectClass, std::optional<uint8_t> slot,
-                             std::vector<CK_OBJECT_HANDLE>& found)
+CK_RV Pkcs11Device::findObjects(CK_OBJECT_CLASS objectClass, std::optional<uint8_t> slot,
+                                std::vector<CK_OBJECT_HANDLE>& found)
 {
     // What to look for: objects of this class and, if a slot is given,
     // whose CKA_ID is {slot}.
@@ -62,7 +62,7 @@ CK_RV Pkcs11Hsm::findObjects(CK_OBJECT_CLASS objectClass, std::optional<uint8_t>
     return m_fn->C_FindObjectsFinal(m_session);
 }
 
-CK_RV Pkcs11Hsm::readPublicKey(CK_OBJECT_HANDLE object, std::vector<uint8_t>& pubKey)
+CK_RV Pkcs11Device::readPublicKey(CK_OBJECT_HANDLE object, std::vector<uint8_t>& pubKey)
 {
     CK_BYTE ecPoint[67];  // big enough for either curve
     CK_ATTRIBUTE attr = {CKA_EC_POINT, ecPoint, sizeof(ecPoint)};
@@ -91,14 +91,14 @@ CK_RV Pkcs11Hsm::readPublicKey(CK_OBJECT_HANDLE object, std::vector<uint8_t>& pu
     return CKR_GENERAL_ERROR;  // unexpected format
 }
 
-SystemStatus Pkcs11Hsm::init()
+SystemStatus Pkcs11Device::init()
 {
     // 1. Load the module (.so) into this process
     m_library = dlopen(m_modulePath.c_str(), RTLD_NOW | RTLD_LOCAL);
 
     if (m_library == nullptr)
     {
-        return SystemStatus::HSM_ERROR_INIT;
+        return SystemStatus::DEVICE_ERROR_INIT;
     }
 
     // 2. Ask the module for its table of PKCS#11 functions
@@ -108,14 +108,14 @@ SystemStatus Pkcs11Hsm::init()
     if (getFunctionList == nullptr || getFunctionList(&m_fn) != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_INIT;
+        return SystemStatus::DEVICE_ERROR_INIT;
     }
 
     // 3. Initialise the library
     if (m_fn->C_Initialize(nullptr) != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_INIT;
+        return SystemStatus::DEVICE_ERROR_INIT;
     }
 
     m_initialized = true;
@@ -127,7 +127,7 @@ SystemStatus Pkcs11Hsm::init()
     if (m_fn->C_GetSlotList(CK_TRUE, nullptr, &count) != CKR_OK || count == 0)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_INIT;
+        return SystemStatus::DEVICE_ERROR_INIT;
     }
 
     std::vector<CK_SLOT_ID> slots(count);
@@ -135,7 +135,7 @@ SystemStatus Pkcs11Hsm::init()
     if (m_fn->C_GetSlotList(CK_TRUE, slots.data(), &count) != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_INIT;
+        return SystemStatus::DEVICE_ERROR_INIT;
     }
 
     m_slotId = slots[0];
@@ -146,17 +146,17 @@ SystemStatus Pkcs11Hsm::init()
     {
         m_session = CK_INVALID_HANDLE;
         deinit();
-        return SystemStatus::HSM_ERROR_INIT;
+        return SystemStatus::DEVICE_ERROR_INIT;
     }
 
     return SystemStatus::OK;
 }
 
-SystemStatus Pkcs11Hsm::status()
+SystemStatus Pkcs11Device::status()
 {
     if (m_fn == nullptr)
     {
-        return SystemStatus::HSM_ERROR_STATUS;
+        return SystemStatus::DEVICE_ERROR_STATUS;
     }
 
     CK_TOKEN_INFO info;
@@ -164,18 +164,18 @@ SystemStatus Pkcs11Hsm::status()
     if (m_fn->C_GetTokenInfo(m_slotId, &info) != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_STATUS;
+        return SystemStatus::DEVICE_ERROR_STATUS;
     }
 
     return SystemStatus::OK;
 }
 
 // TODO: Think if erasing a key from an empty slot should succeed
-SystemStatus Pkcs11Hsm::eraseKey(uint8_t slot)
+SystemStatus Pkcs11Device::eraseKey(uint8_t slot)
 {
     if (m_fn == nullptr)
     {
-        return SystemStatus::HSM_ERROR_ERASE_KEY;
+        return SystemStatus::DEVICE_ERROR_ERASE_KEY;
     }
 
     // 1. Find both halves of the key pair in this slot
@@ -186,7 +186,7 @@ SystemStatus Pkcs11Hsm::eraseKey(uint8_t slot)
         findObjects(CKO_PUBLIC_KEY, slot, publicKeys) != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_ERASE_KEY;
+        return SystemStatus::DEVICE_ERROR_ERASE_KEY;
     }
 
     std::vector<CK_OBJECT_HANDLE> objects = privateKeys;
@@ -202,18 +202,18 @@ SystemStatus Pkcs11Hsm::eraseKey(uint8_t slot)
         if (rv != CKR_OK && rv != CKR_OBJECT_HANDLE_INVALID)
         {
             deinit();
-            return SystemStatus::HSM_ERROR_ERASE_KEY;
+            return SystemStatus::DEVICE_ERROR_ERASE_KEY;
         }
     }
 
     return SystemStatus::OK;
 }
 
-SystemStatus Pkcs11Hsm::generateKey(uint8_t slot, Curve curve)
+SystemStatus Pkcs11Device::generateKey(uint8_t slot, Curve curve)
 {
     if (m_fn == nullptr)
     {
-        return SystemStatus::HSM_ERROR_GENERATE_KEY_HW_ERROR;
+        return SystemStatus::DEVICE_ERROR_GENERATE_KEY_HW_ERROR;
     }
 
     // 1. Refuse if the slot already holds a key
@@ -224,13 +224,13 @@ SystemStatus Pkcs11Hsm::generateKey(uint8_t slot, Curve curve)
         findObjects(CKO_PUBLIC_KEY, slot, publicKeys) != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_GENERATE_KEY_HW_ERROR;
+        return SystemStatus::DEVICE_ERROR_GENERATE_KEY_HW_ERROR;
     }
 
     if (!privateKeys.empty() || !publicKeys.empty())
     {
         deinit();
-        return SystemStatus::HSM_ERROR_GENERATE_KEY_SLOT_OCCUPIED;
+        return SystemStatus::DEVICE_ERROR_GENERATE_KEY_SLOT_OCCUPIED;
     }
 
     // 2. Pick the mechanism and curve OID
@@ -279,17 +279,17 @@ SystemStatus Pkcs11Hsm::generateKey(uint8_t slot, Curve curve)
     if (rv != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_GENERATE_KEY_HW_ERROR;
+        return SystemStatus::DEVICE_ERROR_GENERATE_KEY_HW_ERROR;
     }
 
     return SystemStatus::OK;
 }
 
-SystemStatus Pkcs11Hsm::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
+SystemStatus Pkcs11Device::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
 {
     if (m_fn == nullptr)
     {
-        return SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR;
+        return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
     }
 
     std::vector<CK_OBJECT_HANDLE> found;
@@ -297,30 +297,30 @@ SystemStatus Pkcs11Hsm::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
     if (findObjects(CKO_PUBLIC_KEY, slot, found) != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR;
+        return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
     }
 
     // No public key object with this ID means the slot is empty
     if (found.empty())
     {
         deinit();
-        return SystemStatus::HSM_ERROR_READ_KEY_EMPTY_SLOT;
+        return SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT;
     }
 
     if (readPublicKey(found[0], pubKey) != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR;
+        return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
     }
 
     return SystemStatus::OK;
 }
 
-SystemStatus Pkcs11Hsm::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
+SystemStatus Pkcs11Device::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
 {
     if (m_fn == nullptr)
     {
-        return SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR;
+        return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
     }
 
     // 1. Find every public key on the token (no slot filter)
@@ -329,7 +329,7 @@ SystemStatus Pkcs11Hsm::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
     if (findObjects(CKO_PUBLIC_KEY, std::nullopt, found) != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR;
+        return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
     }
 
     // 2. One entry per slot, empty unless a key is found there
@@ -344,7 +344,7 @@ SystemStatus Pkcs11Hsm::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
         if (m_fn->C_GetAttributeValue(m_session, object, &idAttr, 1) != CKR_OK)
         {
             deinit();
-            return SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR;
+            return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
         }
 
         // hardwarden slots are a single byte, 0-31. Skip anything else.
@@ -357,19 +357,19 @@ SystemStatus Pkcs11Hsm::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
         if (readPublicKey(object, pubKeys[id[0]]) != CKR_OK)
         {
             deinit();
-            return SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR;
+            return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
         }
     }
 
     return SystemStatus::OK;
 }
 
-SystemStatus Pkcs11Hsm::sign(uint8_t slot, Curve curve, std::vector<uint8_t> payload,
-                             std::vector<uint8_t>& signature)
+SystemStatus Pkcs11Device::sign(uint8_t slot, Curve curve, std::vector<uint8_t> payload,
+                                std::vector<uint8_t>& signature)
 {
     if (m_fn == nullptr)
     {
-        return SystemStatus::HSM_ERROR_SIGN;
+        return SystemStatus::DEVICE_ERROR_SIGN;
     }
 
     // 1. Find the private key in this slot
@@ -378,7 +378,7 @@ SystemStatus Pkcs11Hsm::sign(uint8_t slot, Curve curve, std::vector<uint8_t> pay
     if (findObjects(CKO_PRIVATE_KEY, slot, found) != CKR_OK || found.empty())
     {
         deinit();
-        return SystemStatus::HSM_ERROR_SIGN;
+        return SystemStatus::DEVICE_ERROR_SIGN;
     }
 
     // 2. Pick the mechanism and the data to sign
@@ -395,7 +395,7 @@ SystemStatus Pkcs11Hsm::sign(uint8_t slot, Curve curve, std::vector<uint8_t> pay
                        nullptr) != 1)
         {
             deinit();
-            return SystemStatus::HSM_ERROR_SIGN;
+            return SystemStatus::DEVICE_ERROR_SIGN;
         }
 
         data = hash;
@@ -406,7 +406,7 @@ SystemStatus Pkcs11Hsm::sign(uint8_t slot, Curve curve, std::vector<uint8_t> pay
     if (m_fn->C_SignInit(m_session, &mechanism, found[0]) != CKR_OK)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_SIGN;
+        return SystemStatus::DEVICE_ERROR_SIGN;
     }
 
     std::vector<uint8_t> out(64);  // R || S, 64 bytes for both curves
@@ -416,15 +416,15 @@ SystemStatus Pkcs11Hsm::sign(uint8_t slot, Curve curve, std::vector<uint8_t> pay
         outLen != 64)
     {
         deinit();
-        return SystemStatus::HSM_ERROR_SIGN;
+        return SystemStatus::DEVICE_ERROR_SIGN;
     }
 
     signature = out;
     return SystemStatus::OK;
 }
 
-SystemStatus Pkcs11Hsm::verify(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
-                               std::vector<uint8_t> signature)
+SystemStatus Pkcs11Device::verify(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
+                                  std::vector<uint8_t> signature)
 {
     if (pubKey.size() == 32)
     {
@@ -438,12 +438,12 @@ SystemStatus Pkcs11Hsm::verify(std::vector<uint8_t> pubKey, std::vector<uint8_t>
     {
         // This should never happen if parser validation is correct
         assert(false && "Invalid public key size in LibtropicSecureElement::verify()");
-        return SystemStatus::HSM_ERROR_VERIFY;
+        return SystemStatus::DEVICE_ERROR_VERIFY;
     }
 }
 
-SystemStatus Pkcs11Hsm::verifyEd25519(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
-                                      std::vector<uint8_t> signature)
+SystemStatus Pkcs11Device::verifyEd25519(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
+                                         std::vector<uint8_t> signature)
 {
     // Create EVP_PKEY from raw Ed25519 public key
     EVP_PKEY* pkey =
@@ -451,7 +451,7 @@ SystemStatus Pkcs11Hsm::verifyEd25519(std::vector<uint8_t> pubKey, std::vector<u
 
     if (pkey == nullptr)
     {
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     // Create message digest context
@@ -460,7 +460,7 @@ SystemStatus Pkcs11Hsm::verifyEd25519(std::vector<uint8_t> pubKey, std::vector<u
     if (mdctx == nullptr)
     {
         EVP_PKEY_free(pkey);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     // Initialize verification with NULL digest (Ed25519 is PureEdDSA, no pre-hashing)
@@ -468,7 +468,7 @@ SystemStatus Pkcs11Hsm::verifyEd25519(std::vector<uint8_t> pubKey, std::vector<u
     {
         EVP_MD_CTX_free(mdctx);
         EVP_PKEY_free(pkey);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     // Verify the signature (one-shot)
@@ -478,11 +478,11 @@ SystemStatus Pkcs11Hsm::verifyEd25519(std::vector<uint8_t> pubKey, std::vector<u
     EVP_MD_CTX_free(mdctx);
     EVP_PKEY_free(pkey);
 
-    return (result == 1) ? SystemStatus::OK : SystemStatus::HSM_ERROR_VERIFY_INVALID_SIGNATURE;
+    return (result == 1) ? SystemStatus::OK : SystemStatus::DEVICE_ERROR_VERIFY_INVALID_SIGNATURE;
 }
 
-SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
-                                   std::vector<uint8_t> signature)
+SystemStatus Pkcs11Device::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint8_t> payload,
+                                      std::vector<uint8_t> signature)
 {
     // Hash the payload with SHA-256
     unsigned char hash[32];
@@ -492,25 +492,25 @@ SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint
 
     if (mdctx == nullptr)
     {
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     if (EVP_DigestInit_ex(mdctx, EVP_sha256(), nullptr) <= 0)
     {
         EVP_MD_CTX_free(mdctx);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     if (EVP_DigestUpdate(mdctx, payload.data(), payload.size()) <= 0)
     {
         EVP_MD_CTX_free(mdctx);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     if (EVP_DigestFinal_ex(mdctx, hash, &hash_len) <= 0)
     {
         EVP_MD_CTX_free(mdctx);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     EVP_MD_CTX_free(mdctx);
@@ -526,7 +526,7 @@ SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint
 
     if (ec_key == nullptr)
     {
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     const EC_GROUP* group = EC_KEY_get0_group(ec_key);
@@ -535,7 +535,7 @@ SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint
     if (ec_point == nullptr)
     {
         EC_KEY_free(ec_key);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     BN_CTX* bn_ctx = BN_CTX_new();
@@ -544,7 +544,7 @@ SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint
     {
         EC_POINT_free(ec_point);
         EC_KEY_free(ec_key);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     if (EC_POINT_oct2point(group, ec_point, uncompressed_point, 65, bn_ctx) <= 0)
@@ -552,7 +552,7 @@ SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint
         BN_CTX_free(bn_ctx);
         EC_POINT_free(ec_point);
         EC_KEY_free(ec_key);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     if (EC_KEY_set_public_key(ec_key, ec_point) <= 0)
@@ -560,7 +560,7 @@ SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint
         BN_CTX_free(bn_ctx);
         EC_POINT_free(ec_point);
         EC_KEY_free(ec_key);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     BN_CTX_free(bn_ctx);
@@ -572,14 +572,14 @@ SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint
     if (pkey == nullptr)
     {
         EC_KEY_free(ec_key);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     if (EVP_PKEY_assign_EC_KEY(pkey, ec_key) <= 0)
     {
         EVP_PKEY_free(pkey);
         EC_KEY_free(ec_key);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     // Verify the signature using EVP_PKEY_verify
@@ -588,14 +588,14 @@ SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint
     if (pkey_ctx == nullptr)
     {
         EVP_PKEY_free(pkey);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     if (EVP_PKEY_verify_init(pkey_ctx) <= 0)
     {
         EVP_PKEY_CTX_free(pkey_ctx);
         EVP_PKEY_free(pkey);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     std::vector<uint8_t> der_signature = rawSignatureToDer(signature);
@@ -604,7 +604,7 @@ SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint
     {
         EVP_PKEY_CTX_free(pkey_ctx);
         EVP_PKEY_free(pkey);
-        return SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR;
+        return SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR;
     }
 
     int result =
@@ -613,11 +613,11 @@ SystemStatus Pkcs11Hsm::verifyP256(std::vector<uint8_t> pubKey, std::vector<uint
     EVP_PKEY_CTX_free(pkey_ctx);
     EVP_PKEY_free(pkey);
 
-    return (result == 1) ? SystemStatus::OK : SystemStatus::HSM_ERROR_VERIFY_INVALID_SIGNATURE;
+    return (result == 1) ? SystemStatus::OK : SystemStatus::DEVICE_ERROR_VERIFY_INVALID_SIGNATURE;
 }
 
 // TODO: Consider refactoring this function somewhere else
-std::vector<uint8_t> Pkcs11Hsm::rawSignatureToDer(const std::vector<uint8_t>& raw_sig)
+std::vector<uint8_t> Pkcs11Device::rawSignatureToDer(const std::vector<uint8_t>& raw_sig)
 {
     // raw_sig is 64 bytes: r (32 bytes) || s (32 bytes)
     if (raw_sig.size() != 64)
@@ -663,7 +663,7 @@ std::vector<uint8_t> Pkcs11Hsm::rawSignatureToDer(const std::vector<uint8_t>& ra
     return result;
 }
 
-SystemStatus Pkcs11Hsm::deinit()
+SystemStatus Pkcs11Device::deinit()
 {
     CK_RV rv = CKR_OK;
 
@@ -688,5 +688,5 @@ SystemStatus Pkcs11Hsm::deinit()
 
     m_fn = nullptr;
 
-    return (rv == CKR_OK) ? SystemStatus::OK : SystemStatus::HSM_ERROR_DEINIT;
+    return (rv == CKR_OK) ? SystemStatus::OK : SystemStatus::DEVICE_ERROR_DEINIT;
 }

@@ -84,7 +84,7 @@ def run_test(description, command, expected_exit_code=0, setup=None, cleanup=Non
 
 print(f"\033[93m{'=' * 50}\033[0m")
 print(f"\033[93mWARNING: System tests will erase ALL keys from\033[0m")
-print(f"\033[93mthe HSM before running.\033[0m")
+print(f"\033[93mthe hardware security device before running.\033[0m")
 print()
 print(f"\033[93mDo NOT run on a production device.\033[0m")
 print(f"\033[93m{'=' * 50}\033[0m")
@@ -100,7 +100,7 @@ print("\n" + "="*50)
 print("Running System Tests")
 print("="*50 + "\n")
 
-print("Preparing HSM...")
+print("Preparing the device...")
 for slot in range(32):
     run_command([BINARY, "tropic01", "erase-key", "--slot", str(slot)])
 print("Ready.\n")
@@ -249,7 +249,7 @@ run_test("sign - key not found (file)",
 # Verify
 run_test("verify - help", [BINARY, "tropic01", "verify", "--help"])  
 
-run_test("verify - Ed25519 - HSM key - valid data",
+run_test("verify - Ed25519 - valid data",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "0", "--data", ED25519_VALID_DATA, "--signature", sig],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "0"],
@@ -257,7 +257,7 @@ run_test("verify - Ed25519 - HSM key - valid data",
          ],
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "0"])
 
-run_test("verify - Ed25519 - HSM key - valid file",
+run_test("verify - Ed25519 - valid file",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "0", "--file", "test_file.txt", "--signature", sig],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "0"],
@@ -265,7 +265,7 @@ run_test("verify - Ed25519 - HSM key - valid file",
          ],
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "0"])     
 
-run_test("verify - Ed25519 - HSM key - invalid data",
+run_test("verify - Ed25519 - invalid data",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--data", "wrong_data", "--signature", sig],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "2"],
@@ -274,7 +274,7 @@ run_test("verify - Ed25519 - HSM key - invalid data",
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
-run_test("verify - Ed25519 - HSM key - invalid file",
+run_test("verify - Ed25519 - invalid file",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--file", "large_test_file.txt", "--signature", sig],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "2"],
@@ -283,7 +283,7 @@ run_test("verify - Ed25519 - HSM key - invalid file",
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
-run_test("verify - Ed25519 - HSM key - invalid signature + valid data",
+run_test("verify - Ed25519 - invalid signature + valid data",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--data", ED25519_VALID_DATA, "--signature", INVALID_SIGNATURE],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "2"],
@@ -292,7 +292,7 @@ run_test("verify - Ed25519 - HSM key - invalid signature + valid data",
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
-run_test("verify - Ed25519 - HSM key - invalid signature + valid file",
+run_test("verify - Ed25519 - invalid signature + valid file",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--file", "test_file.txt", "--signature", INVALID_SIGNATURE],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "2"],
@@ -301,7 +301,7 @@ run_test("verify - Ed25519 - HSM key - invalid signature + valid file",
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
-run_test("verify - P-256 - HSM key - valid data",
+run_test("verify - P-256 - valid data",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "1", "--data", P256_VALID_DATA, "--signature", sig],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "1", "--curve", "p256"],
@@ -309,7 +309,7 @@ run_test("verify - P-256 - HSM key - valid data",
          ],
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "1"])
 
-run_test("verify - P-256 - HSM key - valid file",
+run_test("verify - P-256 - valid file",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "1", "--file", "large_test_file.txt", "--signature", sig],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "1", "--curve", "p256"],
@@ -317,7 +317,7 @@ run_test("verify - P-256 - HSM key - valid file",
          ],
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "1"])
 
-run_test("verify - P-256 - HSM key - invalid data",
+run_test("verify - P-256 - invalid data",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "3", "--data", "wrong_data", "--signature", sig],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "3", "--curve", "p256"],
@@ -326,7 +326,7 @@ run_test("verify - P-256 - HSM key - invalid data",
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "3"],
          expected_exit_code=1)
 
-run_test("verify - P-256 - HSM key - invalid file",
+run_test("verify - P-256 - invalid file",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "3", "--file", "test_file.txt", "--signature", sig],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "3", "--curve", "p256"],
@@ -335,7 +335,7 @@ run_test("verify - P-256 - HSM key - invalid file",
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "3"],
          expected_exit_code=1)
 
-run_test("verify - P-256 - HSM key - invalid signature + valid data",
+run_test("verify - P-256 - invalid signature + valid data",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--data", P256_VALID_DATA, "--signature", INVALID_SIGNATURE],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "2", "--curve", "p256"],
@@ -344,7 +344,7 @@ run_test("verify - P-256 - HSM key - invalid signature + valid data",
          cleanup=[BINARY, "tropic01", "erase-key", "--slot", "2"],
          expected_exit_code=1)
 
-run_test("verify - P-256 - HSM key - invalid signature + valid file",
+run_test("verify - P-256 - invalid signature + valid file",
          lambda sig: [BINARY, "tropic01", "verify", "--slot", "2", "--file", "large_test_file.txt", "--signature", INVALID_SIGNATURE],
          setup=[
              [BINARY, "tropic01", "generate-key", "--slot", "2", "--curve", "p256"],

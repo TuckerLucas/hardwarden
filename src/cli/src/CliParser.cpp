@@ -8,7 +8,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
 
     if (argc >= 2 && std::string(argv[1]) == "tropic01")
     {
-        command.device = Device::TROPIC01;
+        command.device = DeviceType::TROPIC01;
         argc--;
         argv++;
     }
@@ -37,7 +37,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::STATUS;
 
-        if (command.device == Device::NONE)
+        if (command.device == DeviceType::NONE)
         {
             command.error = ParseError::MISSING_DEVICE;
             return command;
@@ -61,7 +61,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::LOGS;
 
-        if (command.device != Device::NONE)
+        if (command.device != DeviceType::NONE)
         {
             command.error = ParseError::UNEXPECTED_DEVICE;
             return command;
@@ -85,7 +85,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::ERASE_KEY;
 
-        if (command.device == Device::NONE)
+        if (command.device == DeviceType::NONE)
         {
             command.error = ParseError::MISSING_DEVICE;
             return command;
@@ -164,7 +164,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::GENERATE_KEY;
 
-        if (command.device == Device::NONE)
+        if (command.device == DeviceType::NONE)
         {
             command.error = ParseError::MISSING_DEVICE;
             return command;
@@ -285,7 +285,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::READ_KEY;
 
-        if (command.device == Device::NONE)
+        if (command.device == DeviceType::NONE)
         {
             command.error = ParseError::MISSING_DEVICE;
             return command;
@@ -364,7 +364,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::LIST_KEYS;
 
-        if (command.device == Device::NONE)
+        if (command.device == DeviceType::NONE)
         {
             command.error = ParseError::MISSING_DEVICE;
             return command;
@@ -395,7 +395,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::SIGN;
 
-        if (command.device == Device::NONE)
+        if (command.device == DeviceType::NONE)
         {
             command.error = ParseError::MISSING_DEVICE;
             return command;
@@ -525,7 +525,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     {
         command.operation = Operation::VERIFY;
 
-        if (command.device == Device::NONE)
+        if (command.device == DeviceType::NONE)
         {
             command.error = ParseError::MISSING_DEVICE;
             return command;

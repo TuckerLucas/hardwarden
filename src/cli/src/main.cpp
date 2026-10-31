@@ -6,8 +6,8 @@
 #include "AuditLogger.hpp"
 #include "CliDisplay.hpp"
 #include "CliParser.hpp"
-#include "HsmManager.hpp"
-#include "Pkcs11Hsm.hpp"
+#include "DeviceManager.hpp"
+#include "Pkcs11Device.hpp"
 
 std::string getDbPath();
 
@@ -43,9 +43,9 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
-    Pkcs11Hsm se(TROPIC_PKCS11_MODULE_PATH);
+    Pkcs11Device se(TROPIC_PKCS11_MODULE_PATH);
     AuditLogger logger(getDbPath());
-    HsmManager hsm(se, logger);
+    DeviceManager device(se, logger);
 
     SystemStatus result;
 
@@ -53,7 +53,7 @@ int main(int argc, const char* argv[])
     {
         case Operation::HELP:
         {
-            if (command.device == Device::NONE)
+            if (command.device == DeviceType::NONE)
             {
                 display.helpMenu();
             }
@@ -66,7 +66,7 @@ int main(int argc, const char* argv[])
         }
         case Operation::STATUS:
         {
-            result = hsm.status();
+            result = device.status();
 
             display.statusResult(result);
 
@@ -86,7 +86,7 @@ int main(int argc, const char* argv[])
         {
             uint8_t slot = std::stoi(command.options["slot"]);
 
-            result = hsm.eraseKey(slot);
+            result = device.eraseKey(slot);
 
             display.eraseKeyResult(result, slot);
 
@@ -97,7 +97,7 @@ int main(int argc, const char* argv[])
             uint8_t slot = std::stoi(command.options["slot"]);
             Curve curve = (command.options["curve"] == "p256") ? Curve::P256 : Curve::Ed25519;
 
-            result = hsm.generateKey(slot, curve);
+            result = device.generateKey(slot, curve);
 
             display.generateKeyResult(result, command);
 
@@ -108,7 +108,7 @@ int main(int argc, const char* argv[])
             uint8_t slot = std::stoi(command.options["slot"]);
             std::vector<uint8_t> pubKey;
 
-            result = hsm.readKey(slot, pubKey);
+            result = device.readKey(slot, pubKey);
 
             display.readKeyResult(result, slot, pubKey);
 
@@ -118,7 +118,7 @@ int main(int argc, const char* argv[])
         {
             std::vector<std::vector<uint8_t>> pubKeys;
 
-            result = hsm.listKeys(pubKeys);
+            result = device.listKeys(pubKeys);
 
             display.listKeysResult(result, command, pubKeys);
 
@@ -154,7 +154,7 @@ int main(int argc, const char* argv[])
                                                std::istreambuf_iterator<char>());
             }
 
-            result = hsm.sign(slot, payload, signature, dataSource, filepath);
+            result = device.sign(slot, payload, signature, dataSource, filepath);
 
             display.signResult(result, signature);
 
@@ -192,7 +192,7 @@ int main(int argc, const char* argv[])
 
             uint8_t slot = std::stoi(command.options["slot"]);
 
-            result = hsm.verifyWithHsmKey(slot, payload, signature, dataSource, filepath);
+            result = device.verify(slot, payload, signature, dataSource, filepath);
 
             display.verifyResult(result);
 

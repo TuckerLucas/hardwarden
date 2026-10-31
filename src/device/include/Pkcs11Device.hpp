@@ -3,14 +3,14 @@
 #include <optional>
 #include <string>
 
-#include "IHsm.hpp"
+#include "IDevice.hpp"
 #include "Pkcs11.hpp"
 
-class Pkcs11Hsm : public IHsm
+class Pkcs11Device : public IDevice
 {
 public:
-    explicit Pkcs11Hsm(std::string modulePath);
-    ~Pkcs11Hsm() override;
+    explicit Pkcs11Device(std::string modulePath);
+    ~Pkcs11Device() override;
 
     SystemStatus init() override;
     SystemStatus status() override;

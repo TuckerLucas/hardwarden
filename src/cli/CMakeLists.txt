@@ -10,7 +10,7 @@ target_include_directories(hwarden PRIVATE
 )
 
 target_link_libraries(hwarden 
-                      PRIVATE hsm
+                      PRIVATE device
                       PRIVATE audit
                       PRIVATE common)
 

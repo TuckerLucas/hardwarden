@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <vector>
 
-#include "HsmTypes.hpp"
+#include "CryptoTypes.hpp"
 #include "SystemStatus.hpp"
 
-class IHsm
+class IDevice
 {
 public:
     virtual SystemStatus init() = 0;
@@ -21,5 +21,5 @@ public:
                                 std::vector<uint8_t> signature) = 0;
     virtual SystemStatus deinit() = 0;
 
-    virtual ~IHsm() = default;
+    virtual ~IDevice() = default;
 };

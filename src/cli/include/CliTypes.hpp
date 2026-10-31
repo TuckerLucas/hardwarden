@@ -24,7 +24,7 @@ enum class ParseError
 
 struct Command
 {
-    Device device = Device::NONE;
+    DeviceType device = DeviceType::NONE;
     Operation operation = Operation::NONE;
     std::unordered_map<std::string, std::string> options;
     bool requires_help = false;
