@@ -8,7 +8,7 @@ void CliDisplay::helpMenu()
     std::cout << "hwarden <device> <operation> [options]\n";
     std::cout << "hwarden <operation> [options]\n";
     std::cout << "\n";
-    std::cout << "HSM key management and audit logging.\n";
+    std::cout << "Key management and audit logging for hardware security devices.\n";
     std::cout << "\n";
     std::cout << "Usage:\n";
     std::cout << "\n";
@@ -19,18 +19,18 @@ void CliDisplay::helpMenu()
     std::cout << "                     tropic01       Tropic Square TROPIC01 secure element.\n";
     std::cout << "\n";
     std::cout << "        Device operations:\n";
-    std::cout << "                     status         Check if the HSM is connected.\n";
+    std::cout << "                     status         Check if the device is connected.\n";
     std::cout << "                     erase-key      Erase a key.\n";
     std::cout << "                     generate-key   Generate an ECC key pair.\n";
     std::cout << "                     read-key       Read back a public key.\n";
-    std::cout << "                     list-keys      List all public keys stored on the HSM.\n";
+    std::cout << "                     list-keys      List all public keys stored on the device.\n";
     std::cout
         << "                     sign           Sign data/file using a hardware backed key.\n";
     std::cout << "                     verify         Verify a signature using a hardware backed "
                  "key.\n";
     std::cout << "\n";
     std::cout << "        Deviceless operations:\n";
-    std::cout << "                     logs           Display HSM audit logs.\n";
+    std::cout << "                     logs           Display audit log.\n";
     std::cout << "\n";
     std::cout << "Hints:\n";
     std::cout << "\n";
@@ -41,11 +41,11 @@ void CliDisplay::helpMenu()
         << "        Run 'hwarden <operation> --help' for deviceless operation specific options.\n";
 }
 
-void CliDisplay::deviceHelpMenu(Device device)
+void CliDisplay::deviceHelpMenu(DeviceType device)
 {
     switch (device)
     {
-        case Device::TROPIC01:
+        case DeviceType::TROPIC01:
             std::cout << "hwarden tropic01 <operation> [options]\n";
             std::cout << "\n";
             std::cout << "Tropic Square TROPIC01 secure element.\n";
@@ -127,11 +127,11 @@ void CliDisplay::statusResult(SystemStatus result)
     {
         std::cout << "Could not detect hardware: ";
 
-        if (result == SystemStatus::HSM_ERROR_INIT)
+        if (result == SystemStatus::DEVICE_ERROR_INIT)
             std::cout << "initialisation error. Check that the security module is connected.\n";
-        else if (result == SystemStatus::HSM_ERROR_STATUS)
+        else if (result == SystemStatus::DEVICE_ERROR_STATUS)
             std::cout << "ping failed. Check that the security module is connected.\n";
-        else if (result == SystemStatus::HSM_ERROR_DEINIT)
+        else if (result == SystemStatus::DEVICE_ERROR_DEINIT)
             std::cout << "deinitialisation error.\n";
     }
 }
@@ -174,11 +174,11 @@ void CliDisplay::eraseKeyResult(SystemStatus result, uint8_t slot)
     {
         std::cout << "Operation failed: ";
 
-        if (result == SystemStatus::HSM_ERROR_INIT)
+        if (result == SystemStatus::DEVICE_ERROR_INIT)
             std::cout << "initialisation error. Check that the security module is connected.\n";
-        else if (result == SystemStatus::HSM_ERROR_ERASE_KEY)
+        else if (result == SystemStatus::DEVICE_ERROR_ERASE_KEY)
             std::cout << "could not erase key.\n";
-        else if (result == SystemStatus::HSM_ERROR_DEINIT)
+        else if (result == SystemStatus::DEVICE_ERROR_DEINIT)
             std::cout << "deinitialisation error.\n";
     }
 }
@@ -194,22 +194,22 @@ void CliDisplay::generateKeyResult(SystemStatus result, Command command)
     {
         std::cout << "Operation failed: ";
 
-        if (result == SystemStatus::HSM_ERROR_INIT)
+        if (result == SystemStatus::DEVICE_ERROR_INIT)
         {
             std::cout << "initialisation error. Check that the security module is connected.\n";
         }
-        else if (result == SystemStatus::HSM_ERROR_GENERATE_KEY_SLOT_OCCUPIED)
+        else if (result == SystemStatus::DEVICE_ERROR_GENERATE_KEY_SLOT_OCCUPIED)
         {
             std::cout << "slot " << command.options["slot"] << " already contains a key.\n";
             std::cout << "Run 'hwarden tropic01 erase-key --slot " << command.options["slot"]
                       << "' to erase it first.\n";
         }
-        else if (result == SystemStatus::HSM_ERROR_GENERATE_KEY_HW_ERROR)
+        else if (result == SystemStatus::DEVICE_ERROR_GENERATE_KEY_HW_ERROR)
         {
             std::cout << "hardware error generating key in slot " << command.options["slot"]
                       << ".\n";
         }
-        else if (result == SystemStatus::HSM_ERROR_DEINIT)
+        else if (result == SystemStatus::DEVICE_ERROR_DEINIT)
         {
             std::cout << "deinitialisation error.\n";
         }
@@ -249,22 +249,22 @@ void CliDisplay::readKeyResult(SystemStatus result, uint8_t slot, std::vector<ui
     {
         std::cout << "Operation failed: ";
 
-        if (result == SystemStatus::HSM_ERROR_INIT)
+        if (result == SystemStatus::DEVICE_ERROR_INIT)
         {
             std::cout << "initialisation error. Check that the security module is connected.\n";
         }
-        else if (result == SystemStatus::HSM_ERROR_READ_KEY_EMPTY_SLOT)
+        else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT)
         {
             std::cout << "slot " << static_cast<int>(slot) << " is empty.";
             std::cout << "\n";
             std::cout << "Run 'hwarden tropic01 generate-key --slot " << static_cast<int>(slot)
                       << "' to generate a key first.\n";
         }
-        else if (result == SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR)
+        else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
         {
             std::cout << "hardware error reading key from slot " << static_cast<int>(slot) << ".\n";
         }
-        else if (result == SystemStatus::HSM_ERROR_DEINIT)
+        else if (result == SystemStatus::DEVICE_ERROR_DEINIT)
         {
             std::cout << "deinitialisation error.\n";
         }
@@ -371,21 +371,21 @@ void CliDisplay::signResult(SystemStatus result, std::vector<uint8_t> signature)
 
         if (result == SystemStatus::ERROR_FILE_NOT_FOUND)
             std::cout << "file not found. Check the path and try again.\n";
-        else if (result == SystemStatus::HSM_ERROR_INIT)
+        else if (result == SystemStatus::DEVICE_ERROR_INIT)
             std::cout << "initialisation error. Check that the secure element is connected.\n";
-        else if (result == SystemStatus::HSM_ERROR_READ_KEY_EMPTY_SLOT)
+        else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT)
             std::cout << "slot is empty. Generate a key first using 'hwarden tropic01 generate-key "
                          "--slot "
                          "<slot>'.\n";
-        else if (result == SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR)
+        else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
             std::cout << "hardware error reading key from slot. Check that the secure element is "
                          "connected.\n";
-        else if (result == SystemStatus::HSM_ERROR_SIGN)
+        else if (result == SystemStatus::DEVICE_ERROR_SIGN)
             std::cout << "signing failed. Check that a key exists in the specified slot.\n";
-        else if (result == SystemStatus::HSM_ERROR_SIGN_PAYLOAD_TOO_LARGE)
+        else if (result == SystemStatus::DEVICE_ERROR_SIGN_PAYLOAD_TOO_LARGE)
             std::cout
                 << "payload too large for Ed25519 key. Use a P-256 key for larger payloads.\n";
-        else if (result == SystemStatus::HSM_ERROR_DEINIT)
+        else if (result == SystemStatus::DEVICE_ERROR_DEINIT)
             std::cout << "deinitialisation error.\n";
     }
 }
@@ -402,23 +402,23 @@ void CliDisplay::verifyResult(SystemStatus result)
 
         if (result == SystemStatus::ERROR_FILE_NOT_FOUND)
             std::cout << "file not found. Check the path and try again.\n";
-        else if (result == SystemStatus::HSM_ERROR_INIT)
+        else if (result == SystemStatus::DEVICE_ERROR_INIT)
             std::cout << "initialisation error. Check that the secure element is connected.\n";
-        else if (result == SystemStatus::HSM_ERROR_READ_KEY_EMPTY_SLOT)
+        else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT)
             std::cout << "slot is empty. Generate a key first using 'hwarden tropic01 generate-key "
                          "--slot "
                          "<slot>'.\n";
-        else if (result == SystemStatus::HSM_ERROR_READ_KEY_HW_ERROR)
+        else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
             std::cout << "hardware error reading key from slot. Check that the secure element is "
                          "connected.\n";
-        else if (result == SystemStatus::HSM_ERROR_VERIFY)
+        else if (result == SystemStatus::DEVICE_ERROR_VERIFY)
             std::cout << "invalid public key size. Public keys must be 32 or 64 bytes.\n";
-        else if (result == SystemStatus::HSM_ERROR_VERIFY_CRYPTO_ERROR)
+        else if (result == SystemStatus::DEVICE_ERROR_VERIFY_CRYPTO_ERROR)
             std::cout
                 << "cryptographic error during verification. Check your inputs and try again.\n";
-        else if (result == SystemStatus::HSM_ERROR_VERIFY_INVALID_SIGNATURE)
+        else if (result == SystemStatus::DEVICE_ERROR_VERIFY_INVALID_SIGNATURE)
             std::cout << "the signature is invalid.\n";
-        else if (result == SystemStatus::HSM_ERROR_DEINIT)
+        else if (result == SystemStatus::DEVICE_ERROR_DEINIT)
             std::cout << "deinitialisation error.\n";
     }
 }
@@ -431,7 +431,7 @@ void CliDisplay::status_help()
     std::cout << "        hwarden <device> status\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Checks if the HSM is connected and responding.\n";
+    std::cout << "        Checks if the device is connected and responding.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
     std::cout << "        hwarden tropic01 status\n";
@@ -443,7 +443,7 @@ void CliDisplay::logs_help()
     std::cout << "        hwarden logs\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Display audit log of all operations performed on the HSM.\n";
+    std::cout << "        Display audit log of all operations performed on devices.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
     std::cout << "        hwarden logs\n";
@@ -455,7 +455,7 @@ void CliDisplay::eraseKey_help()
     std::cout << "        hwarden <device> erase-key --slot <slot>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Erases the key stored in the specified slot on the HSM.\n";
+    std::cout << "        Erases the key stored in the specified slot on the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --slot <" << MIN_SLOT << ", " << MAX_SLOT
@@ -472,7 +472,7 @@ void CliDisplay::generateKey_help()
     std::cout << "        hwarden <device> generate-key --slot <slot>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Generates an ECC key pair in the specified slot on the HSM.\n";
+    std::cout << "        Generates an ECC key pair in the specified slot on the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --slot  <" << MIN_SLOT << ", " << MAX_SLOT
@@ -494,7 +494,7 @@ void CliDisplay::readKey_help()
     std::cout << "        hwarden <device> read-key --slot <slot>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Reads the public key stored in the specified slot on the HSM.\n";
+    std::cout << "        Reads the public key stored in the specified slot on the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --slot <" << MIN_SLOT << ", " << MAX_SLOT
@@ -511,7 +511,7 @@ void CliDisplay::listKeys_help()
     std::cout << "        hwarden <device> list-keys\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Display all public keys stored on the HSM.\n";
+    std::cout << "        Display all public keys stored on the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --verbose   Show complete key values.\n";
@@ -530,7 +530,7 @@ void CliDisplay::sign_help()
     std::cout << "Description:\n";
     std::cout << "        Sign data or a file using a hardware-backed key stored in the specified "
                  "slot.\n";
-    std::cout << "        The private key never leaves the HSM.\n";
+    std::cout << "        The private key never leaves the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --slot <0-31>   Slot containing the key to sign with (required).\n";

@@ -25,7 +25,7 @@ TEST_CASE("CliParser parseCommand")
 
         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-        REQUIRE(parsed_command.device == Device::TROPIC01);
+        REQUIRE(parsed_command.device == DeviceType::TROPIC01);
         REQUIRE(parsed_command.operation == Operation::NONE);
         REQUIRE(parsed_command.error == ParseError::MISSING_OPERATION);
     }
@@ -36,7 +36,7 @@ TEST_CASE("CliParser parseCommand")
 
         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-        REQUIRE(parsed_command.device == Device::TROPIC01);
+        REQUIRE(parsed_command.device == DeviceType::TROPIC01);
         REQUIRE(parsed_command.operation == Operation::HELP);
         REQUIRE(parsed_command.error == ParseError::NONE);
     }
@@ -47,7 +47,7 @@ TEST_CASE("CliParser parseCommand")
 
         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-        REQUIRE(parsed_command.device == Device::NONE);
+        REQUIRE(parsed_command.device == DeviceType::NONE);
         REQUIRE(parsed_command.error == ParseError::INVALID_OPERATION);
     }
 
@@ -57,7 +57,7 @@ TEST_CASE("CliParser parseCommand")
 
         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-        REQUIRE(parsed_command.device == Device::TROPIC01);
+        REQUIRE(parsed_command.device == DeviceType::TROPIC01);
         REQUIRE(parsed_command.operation == Operation::NONE);
         REQUIRE(parsed_command.error == ParseError::INVALID_OPERATION);
     }
@@ -103,7 +103,7 @@ TEST_CASE("CliParser parseCommand")
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-            REQUIRE(parsed_command.device == Device::TROPIC01);
+            REQUIRE(parsed_command.device == DeviceType::TROPIC01);
             REQUIRE(parsed_command.operation == Operation::STATUS);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.requires_help == false);
@@ -115,7 +115,7 @@ TEST_CASE("CliParser parseCommand")
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-            REQUIRE(parsed_command.device == Device::NONE);
+            REQUIRE(parsed_command.device == DeviceType::NONE);
             REQUIRE(parsed_command.operation == Operation::STATUS);
             REQUIRE(parsed_command.error == ParseError::MISSING_DEVICE);
         }
@@ -161,7 +161,7 @@ TEST_CASE("CliParser parseCommand")
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-            REQUIRE(parsed_command.device == Device::NONE);
+            REQUIRE(parsed_command.device == DeviceType::NONE);
             REQUIRE(parsed_command.operation == Operation::LOGS);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.requires_help == false);
@@ -209,7 +209,7 @@ TEST_CASE("CliParser parseCommand")
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(parsed_command.device == Device::TROPIC01);
+                REQUIRE(parsed_command.device == DeviceType::TROPIC01);
                 REQUIRE(parsed_command.operation == Operation::ERASE_KEY);
                 REQUIRE(parsed_command.options["slot"] == "2");
                 REQUIRE(parsed_command.error == ParseError::NONE);
@@ -356,7 +356,7 @@ TEST_CASE("CliParser parseCommand")
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(parsed_command.device == Device::TROPIC01);
+                REQUIRE(parsed_command.device == DeviceType::TROPIC01);
                 REQUIRE(parsed_command.operation == Operation::GENERATE_KEY);
                 REQUIRE(parsed_command.options["slot"] == "10");
                 REQUIRE(parsed_command.options["curve"] == "ed25519");
@@ -645,7 +645,7 @@ TEST_CASE("CliParser parseCommand")
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(parsed_command.device == Device::TROPIC01);
+                REQUIRE(parsed_command.device == DeviceType::TROPIC01);
                 REQUIRE(parsed_command.operation == Operation::READ_KEY);
                 REQUIRE(parsed_command.options["slot"] == "2");
                 REQUIRE(parsed_command.error == ParseError::NONE);
@@ -793,7 +793,7 @@ TEST_CASE("CliParser parseCommand")
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(parsed_command.device == Device::TROPIC01);
+                REQUIRE(parsed_command.device == DeviceType::TROPIC01);
                 REQUIRE(parsed_command.operation == Operation::LIST_KEYS);
                 REQUIRE(parsed_command.error == ParseError::NONE);
                 REQUIRE(parsed_command.requires_help == false);
@@ -870,7 +870,7 @@ TEST_CASE("CliParser parseCommand")
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                    REQUIRE(parsed_command.device == Device::TROPIC01);
+                    REQUIRE(parsed_command.device == DeviceType::TROPIC01);
                     REQUIRE(parsed_command.operation == Operation::SIGN);
                     REQUIRE(parsed_command.error == ParseError::NONE);
                     REQUIRE(parsed_command.requires_help == false);
@@ -1383,7 +1383,7 @@ TEST_CASE("verify")
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-            REQUIRE(parsed_command.device == Device::TROPIC01);
+            REQUIRE(parsed_command.device == DeviceType::TROPIC01);
             REQUIRE(parsed_command.operation == Operation::VERIFY);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.options["slot"] == "25");
