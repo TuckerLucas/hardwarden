@@ -20,6 +20,7 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     }
 
     std::string operation = std::string(argv[1]);
+    std::vector<std::string> options(argv + 2, argv + argc);
 
     if (operation == "--help")
     {
@@ -35,49 +36,13 @@ Command CliParser::parseCommand(int argc, const char* argv[])
 
     if (operation == "status")
     {
-        command.operation = Operation::STATUS;
-
-        if (command.device == DeviceType::NONE)
-        {
-            command.error = ParseError::MISSING_DEVICE;
-            return command;
-        }
-
-        if (argc == 3 && std::string(argv[2]) == "--help")
-        {
-            command.requires_help = true;
-            return command;
-        }
-
-        if (argc > 2)
-        {
-            command.error = ParseError::INVALID_OPTION;
-        }
-
+        parseStatus(command, options);
         return command;
     }
 
     if (operation == "logs")
     {
-        command.operation = Operation::LOGS;
-
-        if (command.device != DeviceType::NONE)
-        {
-            command.error = ParseError::UNEXPECTED_DEVICE;
-            return command;
-        }
-
-        if (argc == 3 && std::string(argv[2]) == "--help")
-        {
-            command.requires_help = true;
-            return command;
-        }
-
-        if (argc > 2)
-        {
-            command.error = ParseError::INVALID_OPTION;
-        }
-
+        parseLogs(command, options);
         return command;
     }
 
@@ -678,4 +643,48 @@ Command CliParser::parseCommand(int argc, const char* argv[])
     command.error = ParseError::INVALID_OPERATION;
 
     return command;
+}
+
+void CliParser::parseStatus(Command& command, const std::vector<std::string>& options)
+{
+    command.operation = Operation::STATUS;
+
+    if (command.device == DeviceType::NONE)
+    {
+        command.error = ParseError::MISSING_DEVICE;
+        return;
+    }
+
+    if (options == std::vector<std::string>{"--help"})
+    {
+        command.requires_help = true;
+        return;
+    }
+
+    if (!options.empty())
+    {
+        command.error = ParseError::INVALID_OPTION;
+    }
+}
+
+void CliParser::parseLogs(Command& command, const std::vector<std::string>& options)
+{
+    command.operation = Operation::LOGS;
+
+    if (command.device != DeviceType::NONE)
+    {
+        command.error = ParseError::UNEXPECTED_DEVICE;
+        return;
+    }
+
+    if (options == std::vector<std::string>{"--help"})
+    {
+        command.requires_help = true;
+        return;
+    }
+
+    if (!options.empty())
+    {
+        command.error = ParseError::INVALID_OPTION;
+    }
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "CliTypes.hpp"
 
@@ -15,4 +16,7 @@ private:
     {
         return str.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos;
     }
+
+    void parseStatus(Command& command, const std::vector<std::string>& options);
+    void parseLogs(Command& command, const std::vector<std::string>& options);
 };
