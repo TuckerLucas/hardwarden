@@ -1,6 +1,7 @@
 #include "DeviceManager.hpp"
 
-DeviceManager::DeviceManager(IDevice& se, IAuditLogger& logger) : m_se(se), m_logger(logger)
+DeviceManager::DeviceManager(IDevice& se, DeviceType deviceType, IAuditLogger& logger)
+    : m_se(se), m_deviceType(deviceType), m_logger(logger)
 {
 }
 
@@ -14,7 +15,7 @@ SystemStatus DeviceManager::status()
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(operation, result, options);
+        m_logger.log(operation, m_deviceType, result, options);
         return result;
     }
 
@@ -22,13 +23,13 @@ SystemStatus DeviceManager::status()
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(operation, result, options);
+        m_logger.log(operation, m_deviceType, result, options);
         return result;
     }
 
     result = m_se.deinit();
 
-    m_logger.log(operation, result, options);
+    m_logger.log(operation, m_deviceType, result, options);
     return result;
 }
 
@@ -42,7 +43,7 @@ SystemStatus DeviceManager::eraseKey(uint8_t slot)
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(operation, result, options);
+        m_logger.log(operation, m_deviceType, result, options);
         return result;
     }
 
@@ -50,13 +51,13 @@ SystemStatus DeviceManager::eraseKey(uint8_t slot)
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(operation, result, options);
+        m_logger.log(operation, m_deviceType, result, options);
         return result;
     }
 
     result = m_se.deinit();
 
-    m_logger.log(operation, result, options);
+    m_logger.log(operation, m_deviceType, result, options);
     return result;
 }
 
@@ -72,7 +73,7 @@ SystemStatus DeviceManager::generateKey(uint8_t slot, Curve curve)
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(operation, result, options);
+        m_logger.log(operation, m_deviceType, result, options);
         return result;
     }
 
@@ -80,13 +81,13 @@ SystemStatus DeviceManager::generateKey(uint8_t slot, Curve curve)
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(operation, result, options);
+        m_logger.log(operation, m_deviceType, result, options);
         return result;
     }
 
     result = m_se.deinit();
 
-    m_logger.log(operation, result, options);
+    m_logger.log(operation, m_deviceType, result, options);
     return result;
 }
 
@@ -99,7 +100,7 @@ SystemStatus DeviceManager::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::READ_KEY, result, options);
+        m_logger.log(Operation::READ_KEY, m_deviceType, result, options);
         return result;
     }
 
@@ -107,13 +108,13 @@ SystemStatus DeviceManager::readKey(uint8_t slot, std::vector<uint8_t>& pubKey)
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::READ_KEY, result, options);
+        m_logger.log(Operation::READ_KEY, m_deviceType, result, options);
         return result;
     }
 
     result = m_se.deinit();
 
-    m_logger.log(Operation::READ_KEY, result, options);
+    m_logger.log(Operation::READ_KEY, m_deviceType, result, options);
     return result;
 }
 
@@ -126,7 +127,7 @@ SystemStatus DeviceManager::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::LIST_KEYS, result, options);
+        m_logger.log(Operation::LIST_KEYS, m_deviceType, result, options);
         return result;
     }
 
@@ -134,13 +135,13 @@ SystemStatus DeviceManager::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::LIST_KEYS, result, options);
+        m_logger.log(Operation::LIST_KEYS, m_deviceType, result, options);
         return result;
     }
 
     result = m_se.deinit();
 
-    m_logger.log(Operation::LIST_KEYS, result, options);
+    m_logger.log(Operation::LIST_KEYS, m_deviceType, result, options);
     return result;
 }
 
@@ -161,7 +162,7 @@ SystemStatus DeviceManager::sign(uint8_t slot, std::vector<uint8_t> payload,
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::SIGN, result, options);
+        m_logger.log(Operation::SIGN, m_deviceType, result, options);
         return result;
     }
 
@@ -171,7 +172,7 @@ SystemStatus DeviceManager::sign(uint8_t slot, std::vector<uint8_t> payload,
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::SIGN, result, options);
+        m_logger.log(Operation::SIGN, m_deviceType, result, options);
         return result;
     }
 
@@ -179,7 +180,8 @@ SystemStatus DeviceManager::sign(uint8_t slot, std::vector<uint8_t> payload,
 
     if (curve == Curve::Ed25519 && payload.size() > ED25519_MAX_MSG_SIZE)
     {
-        m_logger.log(Operation::SIGN, SystemStatus::DEVICE_ERROR_SIGN_PAYLOAD_TOO_LARGE, options);
+        m_logger.log(Operation::SIGN, m_deviceType,
+                     SystemStatus::DEVICE_ERROR_SIGN_PAYLOAD_TOO_LARGE, options);
         return SystemStatus::DEVICE_ERROR_SIGN_PAYLOAD_TOO_LARGE;
     }
 
@@ -187,7 +189,7 @@ SystemStatus DeviceManager::sign(uint8_t slot, std::vector<uint8_t> payload,
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::SIGN, result, options);
+        m_logger.log(Operation::SIGN, m_deviceType, result, options);
         return result;
     }
 
@@ -195,11 +197,11 @@ SystemStatus DeviceManager::sign(uint8_t slot, std::vector<uint8_t> payload,
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::SIGN, result, options);
+        m_logger.log(Operation::SIGN, m_deviceType, result, options);
         return result;
     }
 
-    m_logger.log(Operation::SIGN, result, options);
+    m_logger.log(Operation::SIGN, m_deviceType, result, options);
     return result;
 }
 
@@ -220,7 +222,7 @@ SystemStatus DeviceManager::verify(uint8_t slot, std::vector<uint8_t> payload,
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::VERIFY, result, options);
+        m_logger.log(Operation::VERIFY, m_deviceType, result, options);
         return result;
     }
 
@@ -230,7 +232,7 @@ SystemStatus DeviceManager::verify(uint8_t slot, std::vector<uint8_t> payload,
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::VERIFY, result, options);
+        m_logger.log(Operation::VERIFY, m_deviceType, result, options);
         return result;
     }
 
@@ -238,7 +240,7 @@ SystemStatus DeviceManager::verify(uint8_t slot, std::vector<uint8_t> payload,
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::VERIFY, result, options);
+        m_logger.log(Operation::VERIFY, m_deviceType, result, options);
         return result;
     }
 
@@ -246,10 +248,10 @@ SystemStatus DeviceManager::verify(uint8_t slot, std::vector<uint8_t> payload,
 
     if (result != SystemStatus::OK)
     {
-        m_logger.log(Operation::VERIFY, result, options);
+        m_logger.log(Operation::VERIFY, m_deviceType, result, options);
         return result;
     }
 
-    m_logger.log(Operation::VERIFY, result, options);
+    m_logger.log(Operation::VERIFY, m_deviceType, result, options);
     return result;
 }

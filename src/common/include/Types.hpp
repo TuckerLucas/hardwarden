@@ -35,6 +35,12 @@ struct SlotRange
     unsigned int max;
 };
 
+enum class DataSource
+{
+    DATA,
+    FILE
+};
+
 inline SlotRange slotRange(DeviceType device)
 {
     switch (device)
@@ -47,11 +53,17 @@ inline SlotRange slotRange(DeviceType device)
     }
 }
 
-enum class DataSource
+inline std::string deviceTypeToString(DeviceType device)
 {
-    DATA,
-    FILE
-};
+    static const std::unordered_map<DeviceType, std::string> device_map = {
+        {DeviceType::TROPIC01, "tropic01"},
+        {DeviceType::NONE, ""},
+    };
+
+    auto it = device_map.find(device);
+    assert(it != device_map.end() && "Unhandled device value in deviceTypeToString()");
+    return (it != device_map.end()) ? it->second : "unknown";
+}
 
 inline std::string operationToString(Operation operation)
 {

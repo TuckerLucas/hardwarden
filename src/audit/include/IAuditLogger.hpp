@@ -10,7 +10,7 @@ class IAuditLogger
 {
 public:
     virtual SystemStatus fetch(std::vector<AuditEntry>& entries) = 0;
-    virtual SystemStatus log(Operation operation, SystemStatus auditResult,
+    virtual SystemStatus log(Operation operation, DeviceType device, SystemStatus auditResult,
                              std::string options) = 0;
 
     virtual ~IAuditLogger() = default;

@@ -14,6 +14,7 @@ AuditLogger::AuditLogger(const std::string& connection_string)
     const char* create_table_sql =
         "CREATE TABLE IF NOT EXISTS audit_log ("
         "timestamp DATETIME DEFAULT (datetime('now', 'localtime')),"
+        "device TEXT NOT NULL DEFAULT '',"
         "operation TEXT NOT NULL,"
         "auditResult TEXT NOT NULL,"
         "options TEXT NOT NULL"
@@ -41,7 +42,7 @@ SystemStatus AuditLogger::fetch(std::vector<AuditEntry>& entries)
         return SystemStatus::AUDIT_ERROR_DB_OPEN;
     }
 
-    const char* sql = "SELECT timestamp, operation, auditResult, options FROM audit_log;";
+    const char* sql = "SELECT timestamp, device, operation, auditResult, options FROM audit_log;";
     sqlite3_stmt* stmt;
 
     if (sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr) != SQLITE_OK)
@@ -54,9 +55,10 @@ SystemStatus AuditLogger::fetch(std::vector<AuditEntry>& entries)
     {
         AuditEntry entry;
         entry.timestamp = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-        entry.operation = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-        entry.auditResult = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-        entry.options = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+        entry.device = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+        entry.operation = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+        entry.auditResult = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+        entry.options = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
         entries.push_back(entry);
     }
 
@@ -65,19 +67,23 @@ SystemStatus AuditLogger::fetch(std::vector<AuditEntry>& entries)
     return SystemStatus::OK;
 }
 
-SystemStatus AuditLogger::log(Operation operation, SystemStatus auditResult, std::string options)
+SystemStatus AuditLogger::log(Operation operation, DeviceType device, SystemStatus auditResult,
+                              std::string options)
 {
     if (!m_db)
     {
         return SystemStatus::AUDIT_ERROR_DB_OPEN;
     }
 
+    std::string device_str = deviceTypeToString(device);
     std::string op_str = operationToString(operation);
     std::string audit_res_str = (auditResult == SystemStatus::OK) ? "SUCCESS" : "FAILED";
 
     // Values are bound, never concatenated into the SQL: user input (e.g. file paths) cannot
     // break or inject statements.
-    const char* sql = "INSERT INTO audit_log (operation, auditResult, options) VALUES (?, ?, ?);";
+    const char* sql =
+        "INSERT INTO audit_log (device, operation, auditResult, options) VALUES (?, ?, ?, ?);";
+
     sqlite3_stmt* stmt = nullptr;
 
     if (sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr) != SQLITE_OK)
@@ -86,9 +92,10 @@ SystemStatus AuditLogger::log(Operation operation, SystemStatus auditResult, std
     }
 
     bool bound =
-        sqlite3_bind_text(stmt, 1, op_str.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK &&
-        sqlite3_bind_text(stmt, 2, audit_res_str.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK &&
-        sqlite3_bind_text(stmt, 3, options.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK;
+        sqlite3_bind_text(stmt, 1, device_str.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK &&
+        sqlite3_bind_text(stmt, 2, op_str.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK &&
+        sqlite3_bind_text(stmt, 3, audit_res_str.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK &&
+        sqlite3_bind_text(stmt, 4, options.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK;
 
     int rc = bound ? sqlite3_step(stmt) : SQLITE_ERROR;
     sqlite3_finalize(stmt);

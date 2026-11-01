@@ -45,7 +45,7 @@ int main(int argc, const char* argv[])
 
     Pkcs11Device se(TROPIC_PKCS11_MODULE_PATH);
     AuditLogger logger(getDbPath());
-    DeviceManager device(se, logger);
+    DeviceManager device(se, command.device, logger);
 
     SystemStatus result;
 

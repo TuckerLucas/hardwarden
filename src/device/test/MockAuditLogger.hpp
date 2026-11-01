@@ -12,6 +12,7 @@ public:
 
     bool logCalled = false;
     Operation lastOperation = Operation::NONE;
+    DeviceType lastDevice = DeviceType::NONE;
     SystemStatus lastSystemStatus = SystemStatus::NOK;
     std::string lastOptions = "";
 
@@ -20,10 +21,12 @@ public:
         return fetchResult;
     }
 
-    SystemStatus log(Operation operation, SystemStatus auditResult, std::string options) override
+    SystemStatus log(Operation operation, DeviceType device, SystemStatus auditResult,
+                     std::string options) override
     {
         logCalled = true;
         lastOperation = operation;
+        lastDevice = device;
         lastSystemStatus = auditResult;
         lastOptions = options;
 

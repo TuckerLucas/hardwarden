@@ -9,7 +9,7 @@
 class DeviceManager
 {
 public:
-    DeviceManager(IDevice& se, IAuditLogger& logger);
+    DeviceManager(IDevice& se, DeviceType deviceType, IAuditLogger& logger);
 
     SystemStatus status();
     SystemStatus eraseKey(uint8_t slot);
@@ -24,4 +24,5 @@ public:
 private:
     IDevice& m_se;
     IAuditLogger& m_logger;
+    DeviceType m_deviceType;
 };
