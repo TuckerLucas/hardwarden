@@ -111,21 +111,21 @@ All operations are logged automatically to `~/.hardwarden/audit.db` and can be r
 
 ```
 Audit Log
----------------------------------------------------------------------------
-Timestamp             Operation      Result    Options             
----------------------------------------------------------------------------
-2026-09-19 16:37:01   status         SUCCESS                       
-2026-09-19 16:37:10   generate-key   SUCCESS   slot=0  curve=ed25519
-2026-09-19 16:37:18   generate-key   SUCCESS   slot=1  curve=p256  
-2026-09-19 16:37:27   generate-key   SUCCESS   slot=29 curve=ed25519
-2026-09-19 16:37:35   read-key       SUCCESS   slot=0              
-2026-09-19 16:37:48   erase-key      SUCCESS   slot=0              
-2026-09-19 16:37:59   list-keys      SUCCESS                       
-2026-09-19 16:38:43   sign           SUCCESS   slot=1  type=data   
-2026-09-19 16:39:07   sign           SUCCESS   slot=29 type=file path=sample.txt
-2026-09-19 16:39:37   verify         SUCCESS   slot=1  type=data   
-2026-09-19 16:39:59   verify         SUCCESS   slot=29 type=file path=sample.txt
----------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+Timestamp             Device    Operation      Result    Options
+-------------------------------------------------------------------------------------
+2026-11-01 12:29:46   tropic01  status         SUCCESS   
+2026-11-01 12:30:18   tropic01  generate-key   SUCCESS   slot=0  curve=ed25519
+2026-11-01 12:30:41   tropic01  generate-key   SUCCESS   slot=1  curve=p256
+2026-11-01 12:31:43   tropic01  generate-key   SUCCESS   slot=29 curve=ed25519
+2026-11-01 12:32:01   tropic01  read-key       SUCCESS   slot=0
+2026-11-01 12:32:13   tropic01  erase-key      SUCCESS   slot=0
+2026-11-01 12:32:30   tropic01  list-keys      SUCCESS   
+2026-11-01 12:33:00   tropic01  sign           SUCCESS   slot=1  type=data
+2026-11-01 12:33:45   tropic01  sign           SUCCESS   slot=29 type=file path=sample.txt
+2026-11-01 12:34:20   tropic01  verify         SUCCESS   slot=1  type=data
+2026-11-01 12:35:10   tropic01  verify         SUCCESS   slot=29 type=file path=sample.txt
+-------------------------------------------------------------------------------------
 11 operations logged
 ```
 

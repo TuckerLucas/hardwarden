@@ -11,7 +11,7 @@ TEST_CASE("hardware status")
 {
     MockDevice mock;
     MockAuditLogger mock_logger;
-    DeviceManager device(mock, mock_logger);
+    DeviceManager device(mock, DeviceType::TROPIC01, mock_logger);
 
     SECTION("success")
     {
@@ -54,6 +54,7 @@ TEST_CASE("hardware status")
             device.status();
 
             REQUIRE(mock_logger.logCalled == true);
+            REQUIRE(mock_logger.lastDevice == DeviceType::TROPIC01);
             REQUIRE(mock_logger.lastOperation == Operation::STATUS);
             REQUIRE(mock_logger.lastSystemStatus == SystemStatus::OK);
             REQUIRE(mock_logger.lastOptions == "");
@@ -101,7 +102,7 @@ TEST_CASE("erase key")
 {
     MockDevice mock;
     MockAuditLogger mock_logger;
-    DeviceManager device(mock, mock_logger);
+    DeviceManager device(mock, DeviceType::TROPIC01, mock_logger);
     uint8_t slot = 29;
 
     SECTION("success")
@@ -192,7 +193,7 @@ TEST_CASE("generate key")
 {
     MockDevice mock;
     MockAuditLogger mock_logger;
-    DeviceManager device(mock, mock_logger);
+    DeviceManager device(mock, DeviceType::TROPIC01, mock_logger);
     uint8_t slot = 6;
     Curve curve = Curve::P256;
 
@@ -297,7 +298,7 @@ TEST_CASE("read key")
 {
     MockDevice mock;
     MockAuditLogger mock_logger;
-    DeviceManager device(mock, mock_logger);
+    DeviceManager device(mock, DeviceType::TROPIC01, mock_logger);
     uint8_t slot = 8;
     std::vector<uint8_t> pubKey;
 
@@ -390,7 +391,7 @@ TEST_CASE("list all keys")
 {
     MockDevice mock;
     MockAuditLogger mock_logger;
-    DeviceManager device(mock, mock_logger);
+    DeviceManager device(mock, DeviceType::TROPIC01, mock_logger);
     std::vector<std::vector<uint8_t>> pubKeys;
 
     SECTION("success")
@@ -481,7 +482,7 @@ TEST_CASE("sign")
 {
     MockDevice mock;
     MockAuditLogger mock_logger;
-    DeviceManager device(mock, mock_logger);
+    DeviceManager device(mock, DeviceType::TROPIC01, mock_logger);
     uint8_t slot = 15;
     std::vector<uint8_t> payload;
     std::vector<uint8_t> signature;
@@ -761,7 +762,7 @@ TEST_CASE("verify")
 {
     MockDevice mock;
     MockAuditLogger mock_logger;
-    DeviceManager device(mock, mock_logger);
+    DeviceManager device(mock, DeviceType::TROPIC01, mock_logger);
     std::vector<uint8_t> payload;
     std::vector<uint8_t> signature;
     DataSource dataSource = DataSource::DATA;
