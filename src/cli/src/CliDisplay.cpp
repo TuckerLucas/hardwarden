@@ -153,20 +153,19 @@ void CliDisplay::logsResult(SystemStatus result, std::vector<AuditEntry> entries
     {
         std::cout << "\n";
         std::cout << "Audit Log\n";
-        std::cout << std::string(75, '-') << "\n";
-        std::cout << std::left << std::setw(22) << "Timestamp" << std::setw(15) << "Operation"
-                  << std::setw(10) << "Result" << std::setw(20) << "Options"
-                  << "\n";
-        std::cout << std::string(75, '-') << "\n";
+        std::cout << std::string(85, '-') << "\n";
+        std::cout << std::left << std::setw(22) << "Timestamp" << std::setw(10) << "Device"
+                  << std::setw(15) << "Operation" << std::setw(10) << "Result" << "Options\n";
+        std::cout << std::string(85, '-') << "\n";
 
         for (const auto& entry : entries)
         {
-            std::cout << std::left << std::setw(22) << entry.timestamp << std::setw(15)
-                      << entry.operation << std::setw(10) << entry.auditResult << std::setw(20)
-                      << entry.options << "\n";
+            std::cout << std::left << std::setw(22) << entry.timestamp << std::setw(10)
+                      << entry.device << std::setw(15) << entry.operation << std::setw(10)
+                      << entry.auditResult << entry.options << "\n";
         }
 
-        std::cout << std::string(75, '-') << "\n";
+        std::cout << std::string(85, '-') << "\n";
         std::cout << entries.size() << " operations logged\n\n";
     }
     else
