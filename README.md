@@ -1,20 +1,17 @@
 # Hardwarden
 
-A command line tool for managing keys on hardware security devices.
+*A warden for hardware-held keys.*
 
-Hardwarden gives different devices one simple, consistent set of commands: generate, list, read and erase keys, and sign and verify data. Private keys are generated inside the hardware and never leave it, and every operation is recorded in a persistent audit log.
+Hardwarden is a command line tool for cryptographic key management, digital signing and verification on hardware security devices. It aims to provide a unified set of commands across devices, handling their differences behind the scenes and recording every operation in a persistent audit log.
 
-Currently supported: the [TROPIC01](https://www.tropicsquare.com/tropic01) secure element.
+## Devices
 
-## Hardware Requirements
-
-The following hardware is required in order to use Hardwarden: 
-
-- Raspberry Pi - available at [Raspberry Pi Foundation](https://www.raspberrypi.com/)
-
-- TROPIC01 Raspberry Pi Shield - available at [Tropic Square](https://www.tropicsquare.com/order-devboard-form)
-
-The TROPIC01 shield mounts directly onto the Raspberry Pi GPIO header and communicates over SPI. You can get started with the TROPIC01 with the tutorials provided [here](https://tropicsquare.github.io/libtropic/latest/tutorials/linux/spi/).
+| Device | Type | Connection | Status |
+|--------|------|------------|--------|
+| [TROPIC01](https://www.tropicsquare.com/tropic01) Raspberry Pi shield | Secure element | SPI | Supported |
+| [TROPIC01](https://www.tropicsquare.com/tropic01) USB devkit | Secure element | USB | In progress |
+| YubiKey 5 series | Security key | USB | Planned |
+| Nitrokey HSM 2 | HSM | USB | Planned |
 
 ## Dependencies
 
@@ -128,7 +125,3 @@ Timestamp             Device    Operation      Result    Options
 -------------------------------------------------------------------------------------
 11 operations logged
 ```
-
-## Roadmap
-
-Multi-device support for additional hardware security devices.
