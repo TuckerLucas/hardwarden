@@ -24,7 +24,8 @@ enum class Operation
 
 enum class DeviceType
 {
-    TROPIC01,
+    TROPIC01_SPI,
+    TROPIC01_USB,
 
     NONE,
 };
@@ -45,7 +46,8 @@ inline SlotRange slotRange(DeviceType device)
 {
     switch (device)
     {
-        case DeviceType::TROPIC01:
+        case DeviceType::TROPIC01_SPI:
+        case DeviceType::TROPIC01_USB:
             return {0, 31};
         default:
             assert(false && "Unhandled device value in slotRange()");
@@ -56,7 +58,8 @@ inline SlotRange slotRange(DeviceType device)
 inline std::string deviceTypeToString(DeviceType device)
 {
     static const std::unordered_map<DeviceType, std::string> device_map = {
-        {DeviceType::TROPIC01, "tropic01"},
+        {DeviceType::TROPIC01_SPI, "tropic01-spi"},
+        {DeviceType::TROPIC01_USB, "tropic01-usb"},
         {DeviceType::NONE, ""},
     };
 

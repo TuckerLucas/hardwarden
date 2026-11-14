@@ -6,12 +6,12 @@ Hardwarden is a command line tool for cryptographic key management, digital sign
 
 ## Devices
 
-| Device | Type | Connection | Status |
-|--------|------|------------|--------|
-| [TROPIC01](https://www.tropicsquare.com/tropic01) Raspberry Pi shield | Secure element | SPI | Supported |
-| [TROPIC01](https://www.tropicsquare.com/tropic01) USB devkit | Secure element | USB | In progress |
-| [YubiKey 5 Series](https://www.yubico.com/products/yubikey-5-overview/) | Security key | USB | Planned |
-| [Nitrokey HSM 2](https://shop.nitrokey.com/shop/nkhs2-nitrokey-hsm-2-7) | HSM | USB | Planned |
+| Device | Name | Type | Connection | Status |
+|--------|------|------|------------|--------|
+| [TROPIC01](https://www.tropicsquare.com/tropic01) Raspberry Pi shield | `tropic01-spi` | Secure element | SPI | Supported |
+| [TROPIC01](https://www.tropicsquare.com/tropic01) USB devkit | `tropic01-usb` | Secure element | USB | Supported |
+| [YubiKey 5 Series](https://www.yubico.com/products/yubikey-5-overview/) | — | Security key | USB | In progress |
+| [Nitrokey HSM 2](https://shop.nitrokey.com/shop/nkhs2-nitrokey-hsm-2-7) | — | HSM | USB | Planned |
 
 ## Dependencies
 
@@ -51,42 +51,44 @@ sudo make install
 
 ## Quick start
 
+The commands below use the TROPIC01 Raspberry Pi shield as an example. For the USB devkit, replace `tropic01-spi` with `tropic01-usb`.
+
 ```bash
 # Confirm the hardware device is connected
-hwarden tropic01 status
+hwarden tropic01-spi status
 
 # Generate an ECC key pair in slot 0 (Ed25519 by default)
-hwarden tropic01 generate-key --slot 0
+hwarden tropic01-spi generate-key --slot 0
 
 # Generate a NIST P-256 ECC key pair in slot 1
-hwarden tropic01 generate-key --slot 1 --curve p256
+hwarden tropic01-spi generate-key --slot 1 --curve p256
 
 # Generate an Ed25519 ECC key pair in slot 29
-hwarden tropic01 generate-key --slot 29 --curve ed25519
+hwarden tropic01-spi generate-key --slot 29 --curve ed25519
 
 # Read back the public key from slot 0
-hwarden tropic01 read-key --slot 0
+hwarden tropic01-spi read-key --slot 0
 
 # Erase the key from slot 0
-hwarden tropic01 erase-key --slot 0
+hwarden tropic01-spi erase-key --slot 0
 
 # List all public keys stored on the hardware
-hwarden tropic01 list-keys
+hwarden tropic01-spi list-keys
 
 # Sign a message using the key in slot 1 (outputs 1st signature)
-hwarden tropic01 sign --slot 1 --data "hello from hardwarden"
+hwarden tropic01-spi sign --slot 1 --data "hello from hardwarden"
 
 # Create a sample file to sign 
 echo "test file content" > sample.txt
 
 # Sign the file using the key in slot 29 (outputs 2nd signature)
-hwarden tropic01 sign --slot 29 --file sample.txt
+hwarden tropic01-spi sign --slot 29 --file sample.txt
 
 # Verify the signed data
-hwarden tropic01 verify --slot 1 --data "hello from hardwarden" --signature <1st signature>
+hwarden tropic01-spi verify --slot 1 --data "hello from hardwarden" --signature <1st signature>
 
 # Verify the signed file
-hwarden tropic01 verify --slot 29 --file sample.txt --signature <2nd signature>
+hwarden tropic01-spi verify --slot 29 --file sample.txt --signature <2nd signature>
 
 # View the audit log
 hwarden logs
@@ -108,20 +110,20 @@ All operations are logged automatically to `~/.hardwarden/audit.db` and can be r
 
 ```
 Audit Log
--------------------------------------------------------------------------------------
-Timestamp             Device    Operation      Result    Options
--------------------------------------------------------------------------------------
-2026-11-01 12:29:46   tropic01  status         SUCCESS   
-2026-11-01 12:30:18   tropic01  generate-key   SUCCESS   slot=0  curve=ed25519
-2026-11-01 12:30:41   tropic01  generate-key   SUCCESS   slot=1  curve=p256
-2026-11-01 12:31:43   tropic01  generate-key   SUCCESS   slot=29 curve=ed25519
-2026-11-01 12:32:01   tropic01  read-key       SUCCESS   slot=0
-2026-11-01 12:32:13   tropic01  erase-key      SUCCESS   slot=0
-2026-11-01 12:32:30   tropic01  list-keys      SUCCESS   
-2026-11-01 12:33:00   tropic01  sign           SUCCESS   slot=1  type=data
-2026-11-01 12:33:45   tropic01  sign           SUCCESS   slot=29 type=file path=sample.txt
-2026-11-01 12:34:20   tropic01  verify         SUCCESS   slot=1  type=data
-2026-11-01 12:35:10   tropic01  verify         SUCCESS   slot=29 type=file path=sample.txt
--------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------
+Timestamp             Device        Operation      Result    Options
+-----------------------------------------------------------------------------------------
+2026-11-14 22:28:46   tropic01-spi  status         SUCCESS   
+2026-11-14 22:29:06   tropic01-spi  generate-key   SUCCESS   slot=0  curve=ed25519
+2026-11-14 22:29:25   tropic01-spi  generate-key   SUCCESS   slot=1  curve=p256
+2026-11-14 22:29:39   tropic01-spi  generate-key   SUCCESS   slot=29 curve=ed25519
+2026-11-14 22:29:53   tropic01-spi  read-key       SUCCESS   slot=0
+2026-11-14 22:30:06   tropic01-spi  erase-key      SUCCESS   slot=0
+2026-11-14 22:30:16   tropic01-spi  list-keys      SUCCESS   
+2026-11-14 22:30:35   tropic01-spi  sign           SUCCESS   slot=1  type=data
+2026-11-14 22:31:07   tropic01-spi  sign           SUCCESS   slot=29 type=file path=sample.txt
+2026-11-14 22:32:11   tropic01-spi  verify         SUCCESS   slot=1  type=data
+2026-11-14 22:32:59   tropic01-spi  verify         SUCCESS   slot=29 type=file path=sample.txt
+-----------------------------------------------------------------------------------------
 11 operations logged
 ```

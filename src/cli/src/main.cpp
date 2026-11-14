@@ -25,6 +25,21 @@ std::vector<uint8_t> hexToBytes(const std::string& hex)
     return bytes;
 }
 
+// The PKCS#11 module that talks to the given device. Empty for device-less operations,
+// which never load a module.
+std::string modulePath(DeviceType device)
+{
+    switch (device)
+    {
+        case DeviceType::TROPIC01_SPI:
+            return TROPIC01_SPI_PKCS11_MODULE_PATH;
+        case DeviceType::TROPIC01_USB:
+            return TROPIC01_USB_PKCS11_MODULE_PATH;
+        default:
+            return "";
+    }
+}
+
 int main(int argc, const char* argv[])
 {
     CliDisplay display;
@@ -43,7 +58,7 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
-    Pkcs11Device se(TROPIC_PKCS11_MODULE_PATH);
+    Pkcs11Device se(modulePath(command.device));
     AuditLogger logger(getDbPath());
     DeviceManager device(se, command.device, logger);
 

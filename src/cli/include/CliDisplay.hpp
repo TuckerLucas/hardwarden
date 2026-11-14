@@ -28,12 +28,12 @@ public:
     // operation specific help menu functions
     void operationHelpMenu(Operation op, DeviceType device);
 
-    void status_help();
+    void status_help(DeviceType device);
     void logs_help();
     void eraseKey_help(DeviceType device);
     void generateKey_help(DeviceType device);
     void readKey_help(DeviceType device);
-    void listKeys_help();
+    void listKeys_help(DeviceType device);
     void sign_help(DeviceType device);
     void verify_help(DeviceType device);
 };

@@ -15,9 +15,10 @@ target_link_libraries(hwarden
                       PRIVATE common)
 
 target_compile_definitions(hwarden PRIVATE
-    TROPIC_PKCS11_MODULE_PATH="${TROPIC_PKCS11_MODULE}"
+    TROPIC01_SPI_PKCS11_MODULE_PATH="${TROPIC01_SPI_PKCS11_MODULE}"
+    TROPIC01_USB_PKCS11_MODULE_PATH="${TROPIC01_USB_PKCS11_MODULE}"
 )
-add_dependencies(hwarden libtropic_pkcs11)
+add_dependencies(hwarden libtropic_pkcs11_spi libtropic_pkcs11_usb)
 
 install(TARGETS hwarden DESTINATION /usr/local/bin)
 

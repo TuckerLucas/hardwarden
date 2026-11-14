@@ -26,7 +26,10 @@ void CliDisplay::helpMenu()
     std::cout << "                     --help         Show this help menu.\n";
     std::cout << "\n";
     std::cout << "        Devices:\n";
-    std::cout << "                     tropic01       Tropic Square TROPIC01 secure element.\n";
+    std::cout << "                     tropic01-spi   TROPIC01 secure element over SPI (Raspberry "
+                 "Pi shield).\n";
+    std::cout
+        << "                     tropic01-usb   TROPIC01 secure element over USB (USB devkit).\n";
     std::cout << "\n";
     std::cout << "        Device operations:\n";
     std::cout << "                     status         Check if the device is connected.\n";
@@ -55,22 +58,24 @@ void CliDisplay::deviceHelpMenu(DeviceType device)
 {
     switch (device)
     {
-        case DeviceType::TROPIC01:
-            std::cout << "hwarden tropic01 <operation> [options]\n";
+        case DeviceType::TROPIC01_SPI:
+        case DeviceType::TROPIC01_USB:
+            std::cout << "hwarden " << deviceTypeToString(device) << " <operation> [options]\n";
             std::cout << "\n";
-            std::cout << "Tropic Square TROPIC01 secure element.\n";
+            std::cout << (device == DeviceType::TROPIC01_SPI
+                              ? "TROPIC01 secure element over SPI (Raspberry Pi shield).\n"
+                              : "TROPIC01 secure element over USB (USB devkit).\n");
             std::cout << "\n";
             std::cout << "        Key slots:   " << slotRange(device).min << "-"
                       << slotRange(device).max << "\n";
             std::cout << "        Curves:      ed25519, p256\n";
-            std::cout << "\n";
             std::cout << "        Operations:  status, erase-key, generate-key, read-key, "
                          "list-keys, sign, verify\n";
             std::cout << "\n";
             std::cout << "Hint:\n";
             std::cout << "\n";
-            std::cout << "        Run 'hwarden tropic01 <operation> --help' for operation "
-                         "specific options.\n";
+            std::cout << "        Run 'hwarden " << deviceTypeToString(device)
+                      << " <operation> --help' for operation specific options.\n";
             break;
         default:
             assert(false && "Unhandled device value in deviceHelpMenu");
@@ -88,8 +93,17 @@ void CliDisplay::commandError(Command command)
         }
         case ParseError::INVALID_OPERATION:
         {
-            std::cout
-                << "Invalid operation specified. Run 'hwarden --help' for available operations.\n";
+            if (command.device == DeviceType::NONE)
+            {
+                std::cout << "Unknown device or operation. Run 'hwarden --help' for available "
+                             "devices and operations.\n";
+            }
+            else
+            {
+                std::cout << "Unknown operation. Run 'hwarden "
+                          << deviceTypeToString(command.device)
+                          << " --help' for available operations.\n";
+            }
             break;
         }
         case ParseError::MISSING_DEVICE:
@@ -153,19 +167,19 @@ void CliDisplay::logsResult(SystemStatus result, std::vector<AuditEntry> entries
     {
         std::cout << "\n";
         std::cout << "Audit Log\n";
-        std::cout << std::string(85, '-') << "\n";
-        std::cout << std::left << std::setw(22) << "Timestamp" << std::setw(10) << "Device"
+        std::cout << std::string(89, '-') << "\n";
+        std::cout << std::left << std::setw(22) << "Timestamp" << std::setw(14) << "Device"
                   << std::setw(15) << "Operation" << std::setw(10) << "Result" << "Options\n";
-        std::cout << std::string(85, '-') << "\n";
+        std::cout << std::string(89, '-') << "\n";
 
         for (const auto& entry : entries)
         {
-            std::cout << std::left << std::setw(22) << entry.timestamp << std::setw(10)
+            std::cout << std::left << std::setw(22) << entry.timestamp << std::setw(14)
                       << entry.device << std::setw(15) << entry.operation << std::setw(10)
                       << entry.auditResult << entry.options << "\n";
         }
 
-        std::cout << std::string(85, '-') << "\n";
+        std::cout << std::string(89, '-') << "\n";
         std::cout << entries.size() << " operations logged\n\n";
     }
     else
@@ -211,7 +225,7 @@ void CliDisplay::generateKeyResult(SystemStatus result, Command command)
         else if (result == SystemStatus::DEVICE_ERROR_GENERATE_KEY_SLOT_OCCUPIED)
         {
             std::cout << "slot " << command.options["slot"] << " already contains a key.\n";
-            std::cout << "Run 'hwarden tropic01 erase-key --slot " << command.options["slot"]
+            std::cout << "Run 'hwarden tropic01-spi erase-key --slot " << command.options["slot"]
                       << "' to erase it first.\n";
         }
         else if (result == SystemStatus::DEVICE_ERROR_GENERATE_KEY_HW_ERROR)
@@ -267,7 +281,7 @@ void CliDisplay::readKeyResult(SystemStatus result, uint8_t slot, std::vector<ui
         {
             std::cout << "slot " << static_cast<int>(slot) << " is empty.";
             std::cout << "\n";
-            std::cout << "Run 'hwarden tropic01 generate-key --slot " << static_cast<int>(slot)
+            std::cout << "Run 'hwarden tropic01-spi generate-key --slot " << static_cast<int>(slot)
                       << "' to generate a key first.\n";
         }
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
@@ -384,9 +398,10 @@ void CliDisplay::signResult(SystemStatus result, std::vector<uint8_t> signature)
         else if (result == SystemStatus::DEVICE_ERROR_INIT)
             std::cout << "initialisation error. Check that the secure element is connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT)
-            std::cout << "slot is empty. Generate a key first using 'hwarden tropic01 generate-key "
-                         "--slot "
-                         "<slot>'.\n";
+            std::cout
+                << "slot is empty. Generate a key first using 'hwarden tropic01-spi generate-key "
+                   "--slot "
+                   "<slot>'.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
             std::cout << "hardware error reading key from slot. Check that the secure element is "
                          "connected.\n";
@@ -415,9 +430,10 @@ void CliDisplay::verifyResult(SystemStatus result)
         else if (result == SystemStatus::DEVICE_ERROR_INIT)
             std::cout << "initialisation error. Check that the secure element is connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT)
-            std::cout << "slot is empty. Generate a key first using 'hwarden tropic01 generate-key "
-                         "--slot "
-                         "<slot>'.\n";
+            std::cout
+                << "slot is empty. Generate a key first using 'hwarden tropic01-spi generate-key "
+                   "--slot "
+                   "<slot>'.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
             std::cout << "hardware error reading key from slot. Check that the secure element is "
                          "connected.\n";
@@ -435,16 +451,13 @@ void CliDisplay::verifyResult(SystemStatus result)
 
 // TODO: Improve help menus for individual operations
 
-void CliDisplay::status_help()
+void CliDisplay::status_help(DeviceType device)
 {
     std::cout << "Usage:\n";
-    std::cout << "        hwarden <device> status\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " status\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Checks if the device is connected and responding.\n";
-    std::cout << "\n";
-    std::cout << "Examples:\n";
-    std::cout << "        hwarden tropic01 status\n";
 }
 
 void CliDisplay::logs_help()
@@ -462,7 +475,7 @@ void CliDisplay::logs_help()
 void CliDisplay::eraseKey_help(DeviceType device)
 {
     std::cout << "Usage:\n";
-    std::cout << "        hwarden <device> erase-key --slot <slot>\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " erase-key --slot <slot>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Erases the key stored in the specified slot on the device.\n";
@@ -471,14 +484,15 @@ void CliDisplay::eraseKey_help(DeviceType device)
     std::cout << "        --slot " << slotRangeText(device) << "   Slot number to erase.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hwarden tropic01 erase-key --slot 0\n";
-    std::cout << "        hwarden tropic01 erase-key --slot 28\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " erase-key --slot 0\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " erase-key --slot 28\n";
 }
 
 void CliDisplay::generateKey_help(DeviceType device)
 {
     std::cout << "Usage:\n";
-    std::cout << "        hwarden <device> generate-key --slot <slot>\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " generate-key --slot <slot> [--curve <curve>]\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Generates an ECC key pair in the specified slot on the device.\n";
@@ -491,16 +505,19 @@ void CliDisplay::generateKey_help(DeviceType device)
     std::cout << "                          p256      NIST P-256 curve\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hwarden tropic01 generate-key --slot 3\n";
-    std::cout << "        hwarden tropic01 generate-key --slot 3 --curve ed25519\n";
-    std::cout << "        hwarden tropic01 generate-key --slot 3 --curve p256\n";
-    std::cout << "        hwarden tropic01 generate-key --curve p256 --slot 3\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " generate-key --slot 3\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " generate-key --slot 3 --curve ed25519\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " generate-key --slot 3 --curve p256\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " generate-key --curve p256 --slot 3\n";
 }
 
 void CliDisplay::readKey_help(DeviceType device)
 {
     std::cout << "Usage:\n";
-    std::cout << "        hwarden <device> read-key --slot <slot>\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " read-key --slot <slot>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Reads the public key stored in the specified slot on the device.\n";
@@ -510,14 +527,14 @@ void CliDisplay::readKey_help(DeviceType device)
               << "   Slot to read the public key from.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hwarden tropic01 read-key --slot 2\n";
-    std::cout << "        hwarden tropic01 read-key --slot 31\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " read-key --slot 2\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " read-key --slot 31\n";
 }
 
-void CliDisplay::listKeys_help()
+void CliDisplay::listKeys_help(DeviceType device)
 {
     std::cout << "Usage:\n";
-    std::cout << "        hwarden <device> list-keys\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " list-keys [--verbose]\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Display all public keys stored on the device.\n";
@@ -526,15 +543,17 @@ void CliDisplay::listKeys_help()
     std::cout << "        --verbose   Show complete key values.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hwarden tropic01 list-keys\n";
-    std::cout << "        hwarden tropic01 list-keys --verbose\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " list-keys\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " list-keys --verbose\n";
 }
 
 void CliDisplay::sign_help(DeviceType device)
 {
     std::cout << "Usage:\n";
-    std::cout << "        hwarden <device> sign --slot <slot> --data <data>\n";
-    std::cout << "        hwarden <device> sign --slot <slot> --file <path>\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " sign --slot <slot> --data <data>\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " sign --slot <slot> --file <path>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Sign data or a file using a hardware-backed key stored in the specified "
@@ -548,17 +567,23 @@ void CliDisplay::sign_help(DeviceType device)
     std::cout << "        --file <path>   Path to file to sign (mutually exclusive with --data).\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hwarden tropic01 sign --slot 0 --data \"hello\"\n";
-    std::cout << "        hwarden tropic01 sign --slot 15 --file document.pdf\n";
-    std::cout << "        hwarden tropic01 sign --data \"hello\" --slot 20\n";
-    std::cout << "        hwarden tropic01 sign --file document.pdf --slot 12\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " sign --slot 0 --data \"hello\"\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " sign --slot 15 --file document.pdf\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " sign --data \"hello\" --slot 20\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " sign --file document.pdf --slot 12\n";
 }
 
 void CliDisplay::verify_help(DeviceType device)
 {
     std::cout << "Usage:\n";
-    std::cout << "        hwarden <device> verify --slot <slot> --data <data> --signature <hex>\n";
-    std::cout << "        hwarden <device> verify --slot <slot> --file <path> --signature <hex>\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " verify --slot <slot> --data <data> --signature <hex>\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " verify --slot <slot> --file <path> --signature <hex>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Verify a signature over data or a file using the public key stored in\n";
@@ -574,9 +599,11 @@ void CliDisplay::verify_help(DeviceType device)
     std::cout << "        --signature <hex>  Signature in hex format (required).\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout
-        << "        hwarden tropic01 verify --slot 0 --data \"hello\" --signature ab12cd34...\n";
-    std::cout << "        hwarden tropic01 verify --slot 15 --file document.pdf --signature "
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " verify --slot 0 --data \"hello\" --signature "
+                 "ab12cd34...\n";
+    std::cout << "        hwarden " << deviceTypeToString(device)
+              << " verify --slot 15 --file document.pdf --signature "
                  "ab12cd34...\n";
 }
 
@@ -585,7 +612,7 @@ void CliDisplay::operationHelpMenu(Operation op, DeviceType device)
     switch (op)
     {
         case Operation::STATUS:
-            status_help();
+            status_help(device);
             break;
         case Operation::LOGS:
             logs_help();
@@ -600,7 +627,7 @@ void CliDisplay::operationHelpMenu(Operation op, DeviceType device)
             readKey_help(device);
             break;
         case Operation::LIST_KEYS:
-            listKeys_help();
+            listKeys_help(device);
             break;
         case Operation::SIGN:
             sign_help(device);

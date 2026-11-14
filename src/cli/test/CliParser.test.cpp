@@ -21,22 +21,22 @@ TEST_CASE("CliParser parseCommand")
 
     SECTION("device without operation")
     {
-        const char* argv[] = {"hwarden", "tropic01"};
+        const char* argv[] = {"hwarden", "tropic01-spi"};
 
         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-        REQUIRE(parsed_command.device == DeviceType::TROPIC01);
+        REQUIRE(parsed_command.device == DeviceType::TROPIC01_SPI);
         REQUIRE(parsed_command.operation == Operation::NONE);
         REQUIRE(parsed_command.error == ParseError::MISSING_OPERATION);
     }
 
     SECTION("device help")
     {
-        const char* argv[] = {"hwarden", "tropic01", "--help"};
+        const char* argv[] = {"hwarden", "tropic01-spi", "--help"};
 
         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-        REQUIRE(parsed_command.device == DeviceType::TROPIC01);
+        REQUIRE(parsed_command.device == DeviceType::TROPIC01_SPI);
         REQUIRE(parsed_command.operation == Operation::HELP);
         REQUIRE(parsed_command.error == ParseError::NONE);
     }
@@ -53,11 +53,11 @@ TEST_CASE("CliParser parseCommand")
 
     SECTION("device with invalid operation")
     {
-        const char* argv[] = {"hwarden", "tropic01", "invalid-operation"};
+        const char* argv[] = {"hwarden", "tropic01-spi", "invalid-operation"};
 
         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-        REQUIRE(parsed_command.device == DeviceType::TROPIC01);
+        REQUIRE(parsed_command.device == DeviceType::TROPIC01_SPI);
         REQUIRE(parsed_command.operation == Operation::NONE);
         REQUIRE(parsed_command.error == ParseError::INVALID_OPERATION);
     }
@@ -99,11 +99,11 @@ TEST_CASE("CliParser parseCommand")
     {
         SECTION("success")
         {
-            const char* argv[] = {"hwarden", "tropic01", "status"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "status"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-            REQUIRE(parsed_command.device == DeviceType::TROPIC01);
+            REQUIRE(parsed_command.device == DeviceType::TROPIC01_SPI);
             REQUIRE(parsed_command.operation == Operation::STATUS);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.requires_help == false);
@@ -122,7 +122,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("help")
         {
-            const char* argv[] = {"hwarden", "tropic01", "status", "--help"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "status", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -144,12 +144,23 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("invalid option")
         {
-            const char* argv[] = {"hwarden", "tropic01", "status", "--some-option"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "status", "--some-option"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
             REQUIRE(parsed_command.operation == Operation::STATUS);
             REQUIRE(parsed_command.error == ParseError::INVALID_OPTION);
+        }
+
+        SECTION("tropic01-usb")
+        {
+            const char* argv[] = {"hwarden", "tropic01-usb", "status"};
+
+            auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+            REQUIRE(parsed_command.device == DeviceType::TROPIC01_USB);
+            REQUIRE(parsed_command.operation == Operation::STATUS);
+            REQUIRE(parsed_command.error == ParseError::NONE);
         }
     }
 
@@ -180,7 +191,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("unexpected device")
         {
-            const char* argv[] = {"hwarden", "tropic01", "logs"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "logs"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -205,11 +216,11 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("non-boundary slot")
             {
-                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot", "2"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot", "2"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(parsed_command.device == DeviceType::TROPIC01);
+                REQUIRE(parsed_command.device == DeviceType::TROPIC01_SPI);
                 REQUIRE(parsed_command.operation == Operation::ERASE_KEY);
                 REQUIRE(parsed_command.options["slot"] == "2");
                 REQUIRE(parsed_command.error == ParseError::NONE);
@@ -220,8 +231,9 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("lower boundary")
                 {
-                    std::string min_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).min);
-                    const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot",
+                    std::string min_slot_str =
+                        std::to_string(slotRange(DeviceType::TROPIC01_SPI).min);
+                    const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot",
                                           min_slot_str.c_str()};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
@@ -234,8 +246,9 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("upper boundary")
                 {
-                    std::string max_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).max);
-                    const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot",
+                    std::string max_slot_str =
+                        std::to_string(slotRange(DeviceType::TROPIC01_SPI).max);
+                    const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot",
                                           max_slot_str.c_str()};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
@@ -250,7 +263,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("help")
         {
-            const char* argv[] = {"hwarden", "tropic01", "erase-key", "--help"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -271,7 +284,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("missing option")
         {
-            const char* argv[] = {"hwarden", "tropic01", "erase-key"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "erase-key"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -283,7 +296,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unknown option")
             {
-                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--invalid-option"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--invalid-option"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -292,7 +305,8 @@ TEST_CASE("CliParser parseCommand")
             }
             SECTION("trailing garbage after valid command")
             {
-                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot", "0", "garbage"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot",
+                                      "0",       "garbage"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -302,8 +316,8 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("duplicated slot")
             {
-                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot",
-                                      "3",       "--slot",   "14"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot",
+                                      "3",       "--slot",       "14"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -314,7 +328,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("missing slot value")
         {
-            const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -326,7 +340,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("not a number")
             {
-                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot", "NaN"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot", "NaN"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -336,7 +350,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("out of boundaries")
             {
-                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot", "32"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot", "32"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -346,7 +360,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("number with trailing characters")
             {
-                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot", "3abc"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot", "3abc"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -355,7 +369,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("wraps around 8 bits")
             {
-                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot", "256"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot", "256"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -364,7 +378,8 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("too large for int")
             {
-                const char* argv[] = {"hwarden", "tropic01", "erase-key", "--slot", "99999999999"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "erase-key", "--slot",
+                                      "99999999999"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -379,11 +394,11 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unspecified curve")
             {
-                const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot", "10"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot", "10"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(parsed_command.device == DeviceType::TROPIC01);
+                REQUIRE(parsed_command.device == DeviceType::TROPIC01_SPI);
                 REQUIRE(parsed_command.operation == Operation::GENERATE_KEY);
                 REQUIRE(parsed_command.options["slot"] == "10");
                 REQUIRE(parsed_command.options["curve"] == "ed25519");
@@ -395,8 +410,8 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("Ed25519")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot",
-                                          "12",      "--curve",  "ed25519"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot",
+                                          "12",      "--curve",      "ed25519"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -409,8 +424,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("P-256")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot",
-                                          "18",      "--curve",  "p256"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot",
+                                          "18",      "--curve",      "p256"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -423,8 +438,9 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("reversed operation order")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key", "--curve", "p256",
-                                          "--slot",  "16"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key",
+                                          "--curve", "p256",         "--slot",
+                                          "16"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -440,8 +456,9 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("lower boundary")
                 {
-                    std::string min_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).min);
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot",
+                    std::string min_slot_str =
+                        std::to_string(slotRange(DeviceType::TROPIC01_SPI).min);
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot",
                                           min_slot_str.c_str()};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
@@ -454,8 +471,9 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("upper boundary")
                 {
-                    std::string max_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).max);
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot",
+                    std::string max_slot_str =
+                        std::to_string(slotRange(DeviceType::TROPIC01_SPI).max);
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot",
                                           max_slot_str.c_str()};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
@@ -470,7 +488,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("help")
         {
-            const char* argv[] = {"hwarden", "tropic01", "generate-key", "--help"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -493,7 +511,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unspecified curve")
             {
-                const char* argv[] = {"hwarden", "tropic01", "generate-key"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "generate-key"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -503,7 +521,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("specified curve")
             {
-                const char* argv[] = {"hwarden", "tropic01", "generate-key", "--curve", "p256"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--curve", "p256"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -516,7 +534,8 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unknown option")
             {
-                const char* argv[] = {"hwarden", "tropic01", "generate-key", "--invalid-option"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "generate-key",
+                                      "--invalid-option"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -526,8 +545,8 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("trailing garbage after valid command")
             {
-                const char* argv[] = {"hwarden", "tropic01", "generate-key",
-                                      "--slot",  "0",        "garbage"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot",
+                                      "0",       "garbage"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -539,8 +558,8 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("slot")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot", "3",
-                                          "--slot",  "14"};
+                    const char* argv[] = {
+                        "hwarden", "tropic01-spi", "generate-key", "--slot", "3", "--slot", "14"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -550,8 +569,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("curve")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot", "3",
-                                          "--curve", "ed25519",  "--curve",      "p256"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot", "3",
+                                          "--curve", "ed25519",      "--curve",      "p256"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -567,7 +586,7 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("unspecified curve")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -577,8 +596,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("slot specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key",
-                                          "--slot",  "--curve",  "p256"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key",
+                                          "--slot",  "--curve",      "p256"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -588,8 +607,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("curve specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key",
-                                          "--curve", "p256",     "--slot"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key",
+                                          "--curve", "p256",         "--slot"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -602,8 +621,8 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("slot specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key",
-                                          "--slot",  "13",       "--curve"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key",
+                                          "--slot",  "13",           "--curve"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -613,8 +632,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("curve specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key",
-                                          "--curve", "--slot",   "26"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key",
+                                          "--curve", "--slot",       "26"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -630,7 +649,8 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("not a number")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot", "NaN"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot",
+                                          "NaN"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -640,7 +660,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("out of boundaries")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot", "32"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot",
+                                          "32"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -651,8 +672,8 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("curve")
             {
-                const char* argv[] = {"hwarden", "tropic01", "generate-key", "--slot",
-                                      "27",      "--curve",  "invalid_curve"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "generate-key", "--slot",
+                                      "27",      "--curve",      "invalid_curve"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -668,11 +689,11 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("non-boundary slot")
             {
-                const char* argv[] = {"hwarden", "tropic01", "read-key", "--slot", "2"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "read-key", "--slot", "2"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(parsed_command.device == DeviceType::TROPIC01);
+                REQUIRE(parsed_command.device == DeviceType::TROPIC01_SPI);
                 REQUIRE(parsed_command.operation == Operation::READ_KEY);
                 REQUIRE(parsed_command.options["slot"] == "2");
                 REQUIRE(parsed_command.error == ParseError::NONE);
@@ -683,8 +704,9 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("lower boundary")
                 {
-                    std::string min_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).min);
-                    const char* argv[] = {"hwarden", "tropic01", "read-key", "--slot",
+                    std::string min_slot_str =
+                        std::to_string(slotRange(DeviceType::TROPIC01_SPI).min);
+                    const char* argv[] = {"hwarden", "tropic01-spi", "read-key", "--slot",
                                           min_slot_str.c_str()};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
@@ -697,8 +719,9 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("upper boundary")
                 {
-                    std::string max_slot_str = std::to_string(slotRange(DeviceType::TROPIC01).max);
-                    const char* argv[] = {"hwarden", "tropic01", "read-key", "--slot",
+                    std::string max_slot_str =
+                        std::to_string(slotRange(DeviceType::TROPIC01_SPI).max);
+                    const char* argv[] = {"hwarden", "tropic01-spi", "read-key", "--slot",
                                           max_slot_str.c_str()};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
@@ -713,7 +736,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("help")
         {
-            const char* argv[] = {"hwarden", "tropic01", "read-key", "--help"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "read-key", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -734,7 +757,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("missing option")
         {
-            const char* argv[] = {"hwarden", "tropic01", "read-key"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "read-key"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -746,7 +769,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unknown option")
             {
-                const char* argv[] = {"hwarden", "tropic01", "read-key", "--invalid-option"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "read-key", "--invalid-option"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -756,7 +779,8 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("trailing garbage after valid command")
             {
-                const char* argv[] = {"hwarden", "tropic01", "read-key", "--slot", "0", "garbage"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "read-key", "--slot",
+                                      "0",       "garbage"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -766,8 +790,8 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("duplicated slot")
             {
-                const char* argv[] = {"hwarden", "tropic01", "read-key", "--slot",
-                                      "3",       "--slot",   "14"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "read-key", "--slot",
+                                      "3",       "--slot",       "14"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -778,7 +802,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("missing slot value")
         {
-            const char* argv[] = {"hwarden", "tropic01", "read-key", "--slot"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "read-key", "--slot"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -790,7 +814,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("not a number")
             {
-                const char* argv[] = {"hwarden", "tropic01", "read-key", "--slot", "NaN"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "read-key", "--slot", "NaN"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -800,7 +824,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("out of boundaries")
             {
-                const char* argv[] = {"hwarden", "tropic01", "read-key", "--slot", "32"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "read-key", "--slot", "32"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -816,11 +840,11 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unspecified verbosity")
             {
-                const char* argv[] = {"hwarden", "tropic01", "list-keys"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "list-keys"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                REQUIRE(parsed_command.device == DeviceType::TROPIC01);
+                REQUIRE(parsed_command.device == DeviceType::TROPIC01_SPI);
                 REQUIRE(parsed_command.operation == Operation::LIST_KEYS);
                 REQUIRE(parsed_command.error == ParseError::NONE);
                 REQUIRE(parsed_command.requires_help == false);
@@ -828,7 +852,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("specified verbosity")
             {
-                const char* argv[] = {"hwarden", "tropic01", "list-keys", "--verbose"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "list-keys", "--verbose"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -841,7 +865,7 @@ TEST_CASE("CliParser parseCommand")
 
         SECTION("help")
         {
-            const char* argv[] = {"hwarden", "tropic01", "list-keys", "--help"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "list-keys", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -864,7 +888,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unknown option")
             {
-                const char* argv[] = {"hwarden", "tropic01", "list-keys", "--some-option"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "list-keys", "--some-option"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -874,7 +898,8 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("trailing garbage after valid command")
             {
-                const char* argv[] = {"hwarden", "tropic01", "list-keys", "--verbose", "garbage"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "list-keys", "--verbose",
+                                      "garbage"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -892,12 +917,12 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("slot specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--slot",
-                                          "3",       "--data",   "data"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--slot",
+                                          "3",       "--data",       "data"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-                    REQUIRE(parsed_command.device == DeviceType::TROPIC01);
+                    REQUIRE(parsed_command.device == DeviceType::TROPIC01_SPI);
                     REQUIRE(parsed_command.operation == Operation::SIGN);
                     REQUIRE(parsed_command.error == ParseError::NONE);
                     REQUIRE(parsed_command.requires_help == false);
@@ -908,8 +933,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("slot specified last")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--data",
-                                          "data",    "--slot",   "3"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--data",
+                                          "data",    "--slot",       "3"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -926,8 +951,8 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("slot specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign",    "--slot",
-                                          "3",       "--file",   "file.pdf"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",    "--slot",
+                                          "3",       "--file",       "file.pdf"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -941,8 +966,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("slot specified last")
                 {
-                    const char* argv[] = {"hwarden",  "tropic01", "sign", "--file",
-                                          "file.pdf", "--slot",   "3"};
+                    const char* argv[] = {"hwarden",  "tropic01-spi", "sign", "--file",
+                                          "file.pdf", "--slot",       "3"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -960,7 +985,7 @@ TEST_CASE("CliParser parseCommand")
                 SECTION("lower boundary")
                 {
                     const char* argv[] = {
-                        "hwarden", "tropic01", "sign", "--slot", "0", "--file", "file.pdf",
+                        "hwarden", "tropic01-spi", "sign", "--slot", "0", "--file", "file.pdf",
                     };
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
@@ -976,7 +1001,7 @@ TEST_CASE("CliParser parseCommand")
                 SECTION("upper boundary")
                 {
                     const char* argv[] = {
-                        "hwarden", "tropic01", "sign", "--slot", "31", "--data", "data",
+                        "hwarden", "tropic01-spi", "sign", "--slot", "31", "--data", "data",
                     };
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
@@ -995,7 +1020,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("success")
             {
-                const char* argv[] = {"hwarden", "tropic01", "sign", "--help"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--help"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1006,7 +1031,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("trailing garbage")
             {
-                const char* argv[] = {"hwarden", "tropic01", "sign", "--help", "garbage"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--help", "garbage"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1030,7 +1055,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unspecified slot and data/file")
             {
-                const char* argv[] = {"hwarden", "tropic01", "sign"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "sign"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1042,7 +1067,7 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("specified data")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--data", "data"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--data", "data"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1054,7 +1079,7 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("specified file")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--file", "file.pdf"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--file", "file.pdf"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1067,7 +1092,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("unspecified data/file")
             {
-                const char* argv[] = {"hwarden", "tropic01", "sign", "--slot", "10"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--slot", "10"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1081,7 +1106,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("unknown option")
             {
-                const char* argv[] = {"hwarden", "tropic01", "sign", "--invalid-option"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--invalid-option"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1093,7 +1118,8 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("slot")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--slot", "26", "--slot"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",
+                                          "--slot",  "26",           "--slot"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1104,8 +1130,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("data")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign",   "--slot", "26",
-                                          "--data",  "data1",    "--data", "data2"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",   "--slot", "26",
+                                          "--data",  "data1",        "--data", "data2"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1117,8 +1143,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("file")
                 {
-                    const char* argv[] = {"hwarden", "tropic01",  "sign",   "--slot",   "26",
-                                          "--file",  "file1.pdf", "--file", "file2.pdf"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",   "--slot",   "26",
+                                          "--file",  "file1.pdf",    "--file", "file2.pdf"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1132,8 +1158,8 @@ TEST_CASE("CliParser parseCommand")
                 {
                     SECTION("data specified first")
                     {
-                        const char* argv[] = {"hwarden", "tropic01", "sign",   "--slot",  "26",
-                                              "--data",  "data",     "--file", "file.pdf"};
+                        const char* argv[] = {"hwarden", "tropic01-spi", "sign",   "--slot",  "26",
+                                              "--data",  "data",         "--file", "file.pdf"};
 
                         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1146,8 +1172,8 @@ TEST_CASE("CliParser parseCommand")
 
                     SECTION("file specified first")
                     {
-                        const char* argv[] = {"hwarden", "tropic01", "sign",   "--slot", "26",
-                                              "--file",  "file.pdf", "--data", "data"};
+                        const char* argv[] = {"hwarden", "tropic01-spi", "sign",   "--slot", "26",
+                                              "--file",  "file.pdf",     "--data", "data"};
 
                         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1166,8 +1192,8 @@ TEST_CASE("CliParser parseCommand")
                 {
                     SECTION("slot specified first")
                     {
-                        const char* argv[] = {"hwarden", "tropic01", "sign", "--slot",
-                                              "26",      "--data",   "data", "garbage"};
+                        const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--slot",
+                                              "26",      "--data",       "data", "garbage"};
 
                         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1179,8 +1205,8 @@ TEST_CASE("CliParser parseCommand")
 
                     SECTION("slot specified last")
                     {
-                        const char* argv[] = {"hwarden", "tropic01", "sign", "--data",
-                                              "data",    "--slot",   "26",   "garbage"};
+                        const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--data",
+                                              "data",    "--slot",       "26",   "garbage"};
 
                         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1195,8 +1221,8 @@ TEST_CASE("CliParser parseCommand")
                 {
                     SECTION("slot specified first")
                     {
-                        const char* argv[] = {"hwarden", "tropic01", "sign",     "--slot",
-                                              "26",      "--file",   "file.pdf", "garbage"};
+                        const char* argv[] = {"hwarden", "tropic01-spi", "sign",     "--slot",
+                                              "26",      "--file",       "file.pdf", "garbage"};
 
                         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1208,8 +1234,8 @@ TEST_CASE("CliParser parseCommand")
 
                     SECTION("slot specified last")
                     {
-                        const char* argv[] = {"hwarden",  "tropic01", "sign", "--file",
-                                              "file.pdf", "--slot",   "26",   "garbage"};
+                        const char* argv[] = {"hwarden",  "tropic01-spi", "sign", "--file",
+                                              "file.pdf", "--slot",       "26",   "garbage"};
 
                         auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1228,7 +1254,7 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("unspecified data/file")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--slot"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--slot"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1239,8 +1265,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("data specified")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign",
-                                          "--slot",  "--data",   "data"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",
+                                          "--slot",  "--data",       "data"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1252,8 +1278,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("file specified")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign",
-                                          "--slot",  "--file",   "file.pdf"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",
+                                          "--slot",  "--file",       "file.pdf"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1265,8 +1291,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("data specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign",
-                                          "--data",  "data",     "--slot"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",
+                                          "--data",  "data",         "--slot"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1278,8 +1304,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("file specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign",
-                                          "--file",  "file.pdf", "--slot"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",
+                                          "--file",  "file.pdf",     "--slot"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1294,7 +1320,7 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("unspecified slot")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--data"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--data"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1306,7 +1332,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("slot specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--slot", "12", "--data"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",
+                                          "--slot",  "12",           "--data"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1318,7 +1345,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("slot specified last")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--data", "--slot", "12"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",
+                                          "--data",  "--slot",       "12"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1333,7 +1361,7 @@ TEST_CASE("CliParser parseCommand")
             {
                 SECTION("unspecified slot")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--file"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--file"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1345,7 +1373,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("slot specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--slot", "15", "--file"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",
+                                          "--slot",  "15",           "--file"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1357,7 +1386,8 @@ TEST_CASE("CliParser parseCommand")
 
                 SECTION("slot specified last")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "sign", "--file", "--slot", "15"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "sign",
+                                          "--file",  "--slot",       "15"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1373,7 +1403,7 @@ TEST_CASE("CliParser parseCommand")
         {
             SECTION("out of boundaries")
             {
-                const char* argv[] = {"hwarden", "tropic01", "sign", "--slot", "32"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--slot", "32"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1384,7 +1414,7 @@ TEST_CASE("CliParser parseCommand")
 
             SECTION("not a number")
             {
-                const char* argv[] = {"hwarden", "tropic01", "sign", "--slot", "NaN"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "sign", "--slot", "NaN"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1404,13 +1434,13 @@ TEST_CASE("verify")
     {
         SECTION("slot and data specified")
         {
-            const char* argv[] = {"hwarden", "tropic01",    "verify",
-                                  "--slot",  "25",          "--data",
-                                  "data",    "--signature", valid_signature.c_str()};
+            const char* argv[] = {"hwarden", "tropic01-spi", "verify",
+                                  "--slot",  "25",           "--data",
+                                  "data",    "--signature",  valid_signature.c_str()};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
-            REQUIRE(parsed_command.device == DeviceType::TROPIC01);
+            REQUIRE(parsed_command.device == DeviceType::TROPIC01_SPI);
             REQUIRE(parsed_command.operation == Operation::VERIFY);
             REQUIRE(parsed_command.error == ParseError::NONE);
             REQUIRE(parsed_command.options["slot"] == "25");
@@ -1422,9 +1452,9 @@ TEST_CASE("verify")
 
         SECTION("slot and file specified")
         {
-            const char* argv[] = {"hwarden",  "tropic01",    "verify",
-                                  "--slot",   "25",          "--file",
-                                  "file.txt", "--signature", valid_signature.c_str()};
+            const char* argv[] = {"hwarden",  "tropic01-spi", "verify",
+                                  "--slot",   "25",           "--file",
+                                  "file.txt", "--signature",  valid_signature.c_str()};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1445,8 +1475,8 @@ TEST_CASE("verify")
             SECTION("signature | file | slot")
             {
                 const char* argv[] = {
-                    "hwarden", "tropic01", "verify", "--signature", valid_signature.c_str(),
-                    "--file",  "file.txt", "--slot", "25"};
+                    "hwarden", "tropic01-spi", "verify", "--signature", valid_signature.c_str(),
+                    "--file",  "file.txt",     "--slot", "25"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1461,9 +1491,9 @@ TEST_CASE("verify")
 
             SECTION("data | slot | signature")
             {
-                const char* argv[] = {"hwarden", "tropic01",    "verify",
-                                      "--data",  "data",        "--slot",
-                                      "25",      "--signature", valid_signature.c_str()};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify",
+                                      "--data",  "data",         "--slot",
+                                      "25",      "--signature",  valid_signature.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1478,15 +1508,9 @@ TEST_CASE("verify")
 
             SECTION("slot | signature | file")
             {
-                const char* argv[] = {"hwarden",
-                                      "tropic01",
-                                      "verify",
-                                      "--slot",
-                                      "25",
-                                      "--signature",
-                                      valid_signature.c_str(),
-                                      "--file",
-                                      "file.txt"};
+                const char* argv[] = {
+                    "hwarden",     "tropic01-spi",          "verify", "--slot",  "25",
+                    "--signature", valid_signature.c_str(), "--file", "file.txt"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1505,7 +1529,7 @@ TEST_CASE("verify")
     {
         SECTION("success")
         {
-            const char* argv[] = {"hwarden", "tropic01", "verify", "--help"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--help"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1527,7 +1551,8 @@ TEST_CASE("verify")
 
         SECTION("unexpected argument")
         {
-            const char* argv[] = {"hwarden", "tropic01", "verify", "--help", "unexpected-argument"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--help",
+                                  "unexpected-argument"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1552,7 +1577,7 @@ TEST_CASE("verify")
     {
         SECTION("unknown option")
         {
-            const char* argv[] = {"hwarden", "tropic01", "verify", "--unknown-option"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--unknown-option"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1564,8 +1589,8 @@ TEST_CASE("verify")
         {
             SECTION("slot")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--slot",
-                                      "3",       "--slot",   "4"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--slot",
+                                      "3",       "--slot",       "4"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1575,8 +1600,8 @@ TEST_CASE("verify")
 
             SECTION("data")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify",   "--data",
-                                      "data",    "--data",   "more-data"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify",   "--data",
+                                      "data",    "--data",       "more-data"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1586,8 +1611,8 @@ TEST_CASE("verify")
 
             SECTION("file")
             {
-                const char* argv[] = {"hwarden",       "tropic01", "verify",          "--file",
-                                      "some_file.txt", "--file",   "another-file.txt"};
+                const char* argv[] = {"hwarden",       "tropic01-spi", "verify",          "--file",
+                                      "some_file.txt", "--file",       "another-file.txt"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1598,7 +1623,7 @@ TEST_CASE("verify")
             SECTION("signature")
             {
                 const char* argv[] = {"hwarden",
-                                      "tropic01",
+                                      "tropic01-spi",
                                       "verify",
                                       "--signature",
                                       valid_signature.c_str(),
@@ -1618,8 +1643,8 @@ TEST_CASE("verify")
             {
                 SECTION("data specified first")
                 {
-                    const char* argv[] = {"hwarden", "tropic01", "verify",  "--data",
-                                          "data",    "--file",   "file.txt"};
+                    const char* argv[] = {"hwarden", "tropic01-spi", "verify",  "--data",
+                                          "data",    "--file",       "file.txt"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1629,8 +1654,8 @@ TEST_CASE("verify")
 
                 SECTION("file specified first")
                 {
-                    const char* argv[] = {"hwarden",  "tropic01", "verify", "--file",
-                                          "file.txt", "--data",   "data"};
+                    const char* argv[] = {"hwarden",  "tropic01-spi", "verify", "--file",
+                                          "file.txt", "--data",       "data"};
 
                     auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1643,7 +1668,7 @@ TEST_CASE("verify")
         SECTION("unexpected argument after valid command")
         {
             const char* argv[] = {"hwarden",
-                                  "tropic01",
+                                  "tropic01-spi",
                                   "verify",
                                   "--slot",
                                   "12",
@@ -1664,7 +1689,7 @@ TEST_CASE("verify")
     {
         SECTION("no option given")
         {
-            const char* argv[] = {"hwarden", "tropic01", "verify"};
+            const char* argv[] = {"hwarden", "tropic01-spi", "verify"};
 
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1676,13 +1701,9 @@ TEST_CASE("verify")
         {
             SECTION("data specified")
             {
-                const char* argv[] = {"hwarden",
-                                      "tropic01",
-                                      "verify",
-                                      "--data",
-                                      "data",
-                                      "--signature",
-                                      valid_signature.c_str()};
+                const char* argv[] = {
+                    "hwarden",     "tropic01-spi",         "verify", "--data", "data",
+                    "--signature", valid_signature.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1692,13 +1713,9 @@ TEST_CASE("verify")
 
             SECTION("file specified")
             {
-                const char* argv[] = {"hwarden",
-                                      "tropic01",
-                                      "verify",
-                                      "--file",
-                                      "file.txt",
-                                      "--signature",
-                                      valid_signature.c_str()};
+                const char* argv[] = {
+                    "hwarden",     "tropic01-spi",         "verify", "--file", "file.txt",
+                    "--signature", valid_signature.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1711,13 +1728,9 @@ TEST_CASE("verify")
         {
             SECTION("slot specified")
             {
-                const char* argv[] = {"hwarden",
-                                      "tropic01",
-                                      "verify",
-                                      "--slot",
-                                      "18",
-                                      "--signature",
-                                      valid_signature.c_str()};
+                const char* argv[] = {
+                    "hwarden",     "tropic01-spi",         "verify", "--slot", "18",
+                    "--signature", valid_signature.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1730,8 +1743,8 @@ TEST_CASE("verify")
         {
             SECTION("slot and data specified")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--slot",
-                                      "15",      "--data",   "data"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--slot",
+                                      "15",      "--data",       "data"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1741,8 +1754,8 @@ TEST_CASE("verify")
 
             SECTION("slot and file specified")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify",  "--slot",
-                                      "15",      "--file",   "file.txt"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify",  "--slot",
+                                      "15",      "--file",       "file.txt"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1758,7 +1771,7 @@ TEST_CASE("verify")
         {
             SECTION("other options not specified")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--slot"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--slot"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1768,7 +1781,8 @@ TEST_CASE("verify")
 
             SECTION("other options specified")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--slot", "--data", "data"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify",
+                                      "--slot",  "--data",       "data"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1781,7 +1795,7 @@ TEST_CASE("verify")
         {
             SECTION("other options not specified")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--data"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--data"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1791,7 +1805,7 @@ TEST_CASE("verify")
 
             SECTION("other options specified")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--data", "--slot", "5"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--data", "--slot", "5"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1804,7 +1818,7 @@ TEST_CASE("verify")
         {
             SECTION("other options not specified")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--file"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--file"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1814,7 +1828,7 @@ TEST_CASE("verify")
 
             SECTION("other options specified")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--file", "--slot", "5"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--file", "--slot", "5"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1827,7 +1841,7 @@ TEST_CASE("verify")
         {
             SECTION("other options not specified")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--signature"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--signature"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1837,8 +1851,8 @@ TEST_CASE("verify")
 
             SECTION("other options specified")
             {
-                const char* argv[] = {"hwarden",     "tropic01", "verify",
-                                      "--signature", "--data",   "some-data"};
+                const char* argv[] = {"hwarden",     "tropic01-spi", "verify",
+                                      "--signature", "--data",       "some-data"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1854,7 +1868,7 @@ TEST_CASE("verify")
         {
             SECTION("not a number")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--slot", "NaN"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--slot", "NaN"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1865,7 +1879,7 @@ TEST_CASE("verify")
 
             SECTION("out of boundaries")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--slot", "32"};
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--slot", "32"};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
@@ -1879,7 +1893,7 @@ TEST_CASE("verify")
         {
             SECTION("invalid signature length")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--signature",
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--signature",
                                       invalid_signature_65_bytes.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
@@ -1890,7 +1904,7 @@ TEST_CASE("verify")
 
             SECTION("invalid signature content")
             {
-                const char* argv[] = {"hwarden", "tropic01", "verify", "--signature",
+                const char* argv[] = {"hwarden", "tropic01-spi", "verify", "--signature",
                                       invalid_signature_64_bytes.c_str()};
 
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);

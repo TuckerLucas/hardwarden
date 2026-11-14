@@ -37,11 +37,20 @@ if(NOT DEFINED LT_GPIO_DEV_PATH)
     set(LT_GPIO_DEV_PATH "/dev/gpiochip0")
 endif()
 
-# ==== TROPIC01 PKCS#11 module ====
-# Built separately: it brings its own libtropic. hardwarden loads it at runtime.
-ExternalProject_Add(libtropic_pkcs11
-    GIT_REPOSITORY https://github.com/tropicsquare/libtropic-pkcs11.git
-    GIT_TAG 604cb444c1deea6a73c4300b36f468083586c6bc
+# ==== TROPIC01 PKCS#11 modules ====
+# The module's connection (HAL) is chosen at compile time, so it is built twice:
+# once for SPI (Raspberry Pi shield) and once for USB (USB devkit).
+# Each build brings its own libtropic. hardwarden loads the right one at runtime.
+set(LIBTROPIC_PKCS11_REPO https://github.com/tropicsquare/libtropic-pkcs11.git)
+set(LIBTROPIC_PKCS11_TAG 604cb444c1deea6a73c4300b36f468083586c6bc)
+
+if(NOT DEFINED TS_USB_DEV)
+    set(TS_USB_DEV "/dev/ttyACM0")
+endif()
+
+ExternalProject_Add(libtropic_pkcs11_spi
+    GIT_REPOSITORY ${LIBTROPIC_PKCS11_REPO}
+    GIT_TAG ${LIBTROPIC_PKCS11_TAG}
     CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=Release
         -DLT_HAL=linux_spi
@@ -51,8 +60,21 @@ ExternalProject_Add(libtropic_pkcs11
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS <BINARY_DIR>/libtropic_pkcs11.so
 )
-ExternalProject_Get_Property(libtropic_pkcs11 BINARY_DIR)
-set(TROPIC_PKCS11_MODULE "${BINARY_DIR}/libtropic_pkcs11.so")
+ExternalProject_Get_Property(libtropic_pkcs11_spi BINARY_DIR)
+set(TROPIC01_SPI_PKCS11_MODULE "${BINARY_DIR}/libtropic_pkcs11.so")
+
+ExternalProject_Add(libtropic_pkcs11_usb
+    GIT_REPOSITORY ${LIBTROPIC_PKCS11_REPO}
+    GIT_TAG ${LIBTROPIC_PKCS11_TAG}
+    CMAKE_ARGS
+        -DCMAKE_BUILD_TYPE=Release
+        -DLT_HAL=posix_usb_dongle
+        -DTS_USB_DEV=${TS_USB_DEV}
+    INSTALL_COMMAND ""
+    BUILD_BYPRODUCTS <BINARY_DIR>/libtropic_pkcs11.so
+)
+ExternalProject_Get_Property(libtropic_pkcs11_usb BINARY_DIR)
+set(TROPIC01_USB_PKCS11_MODULE "${BINARY_DIR}/libtropic_pkcs11.so")
 
 # ==== CTest ====
 include(CTest)
