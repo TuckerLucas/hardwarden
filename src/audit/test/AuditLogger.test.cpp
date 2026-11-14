@@ -24,8 +24,8 @@ TEST_CASE("audit logger")
             {
                 SECTION("status")
                 {
-                    auto write_result =
-                        logger.log(Operation::STATUS, DeviceType::TROPIC01, SystemStatus::OK, "");
+                    auto write_result = logger.log(Operation::STATUS, DeviceType::TROPIC01_SPI,
+                                                   SystemStatus::OK, "");
 
                     REQUIRE(write_result == SystemStatus::OK);
 
@@ -42,7 +42,7 @@ TEST_CASE("audit logger")
 
                 SECTION("erase key")
                 {
-                    auto write_result = logger.log(Operation::ERASE_KEY, DeviceType::TROPIC01,
+                    auto write_result = logger.log(Operation::ERASE_KEY, DeviceType::TROPIC01_SPI,
                                                    SystemStatus::OK, "slot=2");
 
                     REQUIRE(write_result == SystemStatus::OK);
@@ -61,7 +61,7 @@ TEST_CASE("audit logger")
                 SECTION("generate key")
                 {
                     auto write_result = logger.log(
-                        Operation::GENERATE_KEY, DeviceType::TROPIC01,
+                        Operation::GENERATE_KEY, DeviceType::TROPIC01_SPI,
                         SystemStatus::DEVICE_ERROR_GENERATE_KEY_SLOT_OCCUPIED, "slot=2 curve=p256");
 
                     REQUIRE(write_result == SystemStatus::OK);
@@ -79,7 +79,7 @@ TEST_CASE("audit logger")
 
                 SECTION("read key")
                 {
-                    auto write_result = logger.log(Operation::READ_KEY, DeviceType::TROPIC01,
+                    auto write_result = logger.log(Operation::READ_KEY, DeviceType::TROPIC01_SPI,
                                                    SystemStatus::DEVICE_ERROR_DEINIT, "slot=2");
 
                     REQUIRE(write_result == SystemStatus::OK);
@@ -97,7 +97,7 @@ TEST_CASE("audit logger")
 
                 SECTION("list all keys")
                 {
-                    auto write_result = logger.log(Operation::LIST_KEYS, DeviceType::TROPIC01,
+                    auto write_result = logger.log(Operation::LIST_KEYS, DeviceType::TROPIC01_SPI,
                                                    SystemStatus::DEVICE_ERROR_DEINIT, "");
 
                     REQUIRE(write_result == SystemStatus::OK);
@@ -120,12 +120,12 @@ TEST_CASE("audit logger")
                 int n_entries = 3;
 
                 write_result =
-                    logger.log(Operation::STATUS, DeviceType::TROPIC01, SystemStatus::OK, "");
+                    logger.log(Operation::STATUS, DeviceType::TROPIC01_SPI, SystemStatus::OK, "");
                 REQUIRE(write_result == SystemStatus::OK);
-                write_result = logger.log(Operation::ERASE_KEY, DeviceType::TROPIC01,
+                write_result = logger.log(Operation::ERASE_KEY, DeviceType::TROPIC01_SPI,
                                           SystemStatus::OK, "slot=6");
                 REQUIRE(write_result == SystemStatus::OK);
-                write_result = logger.log(Operation::GENERATE_KEY, DeviceType::TROPIC01,
+                write_result = logger.log(Operation::GENERATE_KEY, DeviceType::TROPIC01_SPI,
                                           SystemStatus::OK, "slot=15 curve=ed25519");
                 REQUIRE(write_result == SystemStatus::OK);
 
@@ -153,13 +153,13 @@ TEST_CASE("audit logger")
 
             SECTION("device is stored")
             {
-                REQUIRE(logger.log(Operation::STATUS, DeviceType::TROPIC01, SystemStatus::OK, "") ==
-                        SystemStatus::OK);
+                REQUIRE(logger.log(Operation::STATUS, DeviceType::TROPIC01_SPI, SystemStatus::OK,
+                                   "") == SystemStatus::OK);
 
                 std::vector<AuditEntry> entries;
                 REQUIRE(logger.fetch(entries) == SystemStatus::OK);
                 REQUIRE(entries.size() == 1);
-                REQUIRE(entries[0].device == "tropic01");
+                REQUIRE(entries[0].device == "tropic01-spi");
             }
         }
 
@@ -167,8 +167,8 @@ TEST_CASE("audit logger")
         {
             std::string options = "type=file path=John's file.pdf";
 
-            REQUIRE(logger.log(Operation::SIGN, DeviceType::TROPIC01, SystemStatus::OK, options) ==
-                    SystemStatus::OK);
+            REQUIRE(logger.log(Operation::SIGN, DeviceType::TROPIC01_SPI, SystemStatus::OK,
+                               options) == SystemStatus::OK);
 
             std::vector<AuditEntry> entries;
             REQUIRE(logger.fetch(entries) == SystemStatus::OK);
@@ -180,7 +180,7 @@ TEST_CASE("audit logger")
         {
             std::string options = "path=x'); DROP TABLE audit_log; --";
 
-            logger.log(Operation::SIGN, DeviceType::TROPIC01, SystemStatus::OK, options);
+            logger.log(Operation::SIGN, DeviceType::TROPIC01_SPI, SystemStatus::OK, options);
 
             std::vector<AuditEntry> entries;
             REQUIRE(logger.fetch(entries) == SystemStatus::OK);
@@ -205,7 +205,7 @@ TEST_CASE("audit logger")
         SECTION("writing to database fails")
         {
             auto result =
-                logger.log(Operation::ERASE_KEY, DeviceType::TROPIC01, SystemStatus::OK, "");
+                logger.log(Operation::ERASE_KEY, DeviceType::TROPIC01_SPI, SystemStatus::OK, "");
 
             REQUIRE(result == SystemStatus::AUDIT_ERROR_DB_OPEN);
         }
