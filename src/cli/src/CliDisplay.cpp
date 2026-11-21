@@ -159,6 +159,35 @@ void CliDisplay::commandError(Command command)
     }
 }
 
+void CliDisplay::secretCancelled(Secret secret)
+{
+    std::cout << "Cancelled: no " << (secret == Secret::PIN ? "PIN" : "management key")
+              << " entered.\n";
+}
+
+// Prints the message for a failed login and returns true, or returns false for any other result.
+bool CliDisplay::loginError(SystemStatus result)
+{
+    switch (result)
+    {
+        case SystemStatus::DEVICE_ERROR_PIN_INCORRECT:
+            std::cout << "incorrect PIN. The PIN is blocked after too many wrong attempts.\n";
+            return true;
+        case SystemStatus::DEVICE_ERROR_PIN_LOCKED:
+            std::cout << "the PIN is blocked after too many wrong attempts. Unblock it with the "
+                         "device's PUK before trying again.\n";
+            return true;
+        case SystemStatus::DEVICE_ERROR_MANAGEMENT_KEY_INCORRECT:
+            std::cout << "incorrect management key.\n";
+            return true;
+        case SystemStatus::DEVICE_ERROR_LOGIN:
+            std::cout << "could not log in to the device.\n";
+            return true;
+        default:
+            return false;
+    }
+}
+
 void CliDisplay::statusResult(SystemStatus result)
 {
     if (result == SystemStatus::OK)
@@ -216,6 +245,11 @@ void CliDisplay::eraseKeyResult(SystemStatus result, uint8_t slot)
     {
         std::cout << "Operation failed: ";
 
+        if (loginError(result))
+        {
+            return;
+        }
+
         if (result == SystemStatus::DEVICE_ERROR_INIT)
             std::cout
                 << "initialisation error. Check that the hardware security device is connected.\n";
@@ -236,6 +270,11 @@ void CliDisplay::generateKeyResult(SystemStatus result, Command command)
     else
     {
         std::cout << "Operation failed: ";
+
+        if (loginError(result))
+        {
+            return;
+        }
 
         if (result == SystemStatus::DEVICE_ERROR_INIT)
         {
@@ -345,8 +384,7 @@ void CliDisplay::listKeysResult(SystemStatus result, Command command,
     // TODO: Decide if 60 char separator is enough when verbose is used
     std::cout << "\n";
     std::cout << std::string(60, '-') << "\n";
-    std::cout << std::left << std::setw(8) << "Slot" << std::setw(10) << "Curve"
-              << "Public Key\n";
+    std::cout << std::left << std::setw(8) << "Slot" << std::setw(10) << "Curve" << "Public Key\n";
     std::cout << std::string(60, '-') << "\n";
 
     for (size_t i = 0; i < pubKeys.size(); i++)
@@ -413,6 +451,11 @@ void CliDisplay::signResult(SystemStatus result, std::vector<uint8_t> signature)
     else
     {
         std::cout << "Operation failed: ";
+
+        if (loginError(result))
+        {
+            return;
+        }
 
         if (result == SystemStatus::ERROR_FILE_NOT_FOUND)
             std::cout << "file not found. Check the path and try again.\n";

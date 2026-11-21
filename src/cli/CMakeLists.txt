@@ -13,7 +13,8 @@ target_include_directories(hwarden PRIVATE
 target_link_libraries(hwarden 
                       PRIVATE device
                       PRIVATE audit
-                      PRIVATE common)
+                      PRIVATE common
+                      PRIVATE OpenSSL::Crypto)
 
 target_compile_definitions(hwarden PRIVATE
     TROPIC01_SPI_PKCS11_MODULE_PATH="${TROPIC01_SPI_PKCS11_MODULE}"
@@ -39,6 +40,7 @@ target_include_directories(test_cli PRIVATE
 target_link_libraries(test_cli PRIVATE
     Catch2::Catch2WithMain
     common
+    OpenSSL::Crypto
 )
 
 include(CTest)

@@ -8,6 +8,7 @@
 #include "CliParser.hpp"
 #include "DeviceManager.hpp"
 #include "Pkcs11Device.hpp"
+#include "SecretReader.hpp"
 
 std::string getDbPath();
 
@@ -61,6 +62,23 @@ int main(int argc, const char* argv[])
     }
 
     Pkcs11Device se(modulePath(command.device), command.device);
+    Secret secret = requiredSecret(command.device, command.operation);
+
+    if (secret != Secret::NONE)
+    {
+        std::optional<std::string> value =
+            readSecret(secret == Secret::PIN ? "Enter PIN: " : "Enter management key: ");
+
+        if (!value)
+        {
+            display.secretCancelled(secret);
+            return 1;
+        }
+
+        se.setLogin(secret, *value);
+        wipeSecret(*value);
+    }
+
     AuditLogger logger(getDbPath());
     DeviceManager device(se, command.device, logger);
 

@@ -1,5 +1,6 @@
 #include "SecretReader.hpp"
 
+#include <openssl/crypto.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -59,6 +60,12 @@ private:
     void (*m_previous_sigterm)(int) = SIG_DFL;
 };
 }  // namespace
+
+void wipeSecret(std::string& secret)
+{
+    OPENSSL_cleanse(secret.data(), secret.size());
+    secret.clear();
+}
 
 std::optional<std::string> readSecret(const std::string& prompt)
 {

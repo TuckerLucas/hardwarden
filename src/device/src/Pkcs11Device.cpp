@@ -2,6 +2,7 @@
 
 #include <dlfcn.h>
 #include <openssl/bn.h>
+#include <openssl/crypto.h>
 #include <openssl/ec.h>
 #include <openssl/evp.h>
 
@@ -16,6 +17,51 @@ Pkcs11Device::Pkcs11Device(std::string modulePath, DeviceType device)
 Pkcs11Device::~Pkcs11Device()
 {
     deinit();
+    wipeLoginValue();
+}
+
+void Pkcs11Device::setLogin(Secret secret, const std::string& value)
+{
+    wipeLoginValue();
+    m_loginSecret = secret;
+    m_loginValue = value;
+}
+
+void Pkcs11Device::wipeLoginValue()
+{
+    OPENSSL_cleanse(m_loginValue.data(), m_loginValue.size());
+    m_loginValue.clear();
+}
+
+SystemStatus Pkcs11Device::login()
+{
+    CK_USER_TYPE userType = (m_loginSecret == Secret::PIN) ? CKU_USER : CKU_SO;
+
+    CK_RV rv =
+        m_fn->C_Login(m_session, userType, reinterpret_cast<CK_UTF8CHAR_PTR>(m_loginValue.data()),
+                      m_loginValue.size());
+
+    wipeLoginValue();
+
+    bool rejected = (rv == CKR_PIN_INCORRECT || rv == CKR_PIN_INVALID || rv == CKR_PIN_LEN_RANGE);
+
+    if (rv == CKR_OK || rv == CKR_USER_ALREADY_LOGGED_IN)
+    {
+        return SystemStatus::OK;
+    }
+
+    if (rv == CKR_PIN_LOCKED)
+    {
+        return SystemStatus::DEVICE_ERROR_PIN_LOCKED;
+    }
+
+    if (rejected)
+    {
+        return (m_loginSecret == Secret::PIN) ? SystemStatus::DEVICE_ERROR_PIN_INCORRECT
+                                              : SystemStatus::DEVICE_ERROR_MANAGEMENT_KEY_INCORRECT;
+    }
+
+    return SystemStatus::DEVICE_ERROR_LOGIN;
 }
 
 CK_RV Pkcs11Device::findObjects(CK_OBJECT_CLASS objectClass, std::optional<uint8_t> slot,
@@ -148,6 +194,18 @@ SystemStatus Pkcs11Device::init()
         m_session = CK_INVALID_HANDLE;
         deinit();
         return SystemStatus::DEVICE_ERROR_INIT;
+    }
+
+    // 6. Log in, if this operation needs a secret
+    if (m_loginSecret != Secret::NONE)
+    {
+        SystemStatus result = login();
+
+        if (result != SystemStatus::OK)
+        {
+            deinit();
+            return result;
+        }
     }
 
     return SystemStatus::OK;

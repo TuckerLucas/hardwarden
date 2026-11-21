@@ -24,6 +24,7 @@ public:
                         std::vector<std::vector<uint8_t>> pubKeys);
     void signResult(SystemStatus result, std::vector<uint8_t> signature);
     void verifyResult(SystemStatus result);
+    void secretCancelled(Secret secret);
 
     // operation specific help menu functions
     void operationHelpMenu(Operation op, DeviceType device);
@@ -36,4 +37,7 @@ public:
     void listKeys_help(DeviceType device);
     void sign_help(DeviceType device);
     void verify_help(DeviceType device);
+
+private:
+    bool loginError(SystemStatus result);
 };

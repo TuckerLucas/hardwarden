@@ -11,6 +11,9 @@
 // Returns nothing if the input is empty or ends before a secret is given.
 std::optional<std::string> readSecret(const std::string& prompt);
 
+// Overwrites the secret in memory, so it does not linger after use.
+void wipeSecret(std::string& secret);
+
 // Same as above, with the input, the prompt output and the terminal check passed in.
 std::optional<std::string> readSecret(const std::string& prompt, std::istream& in,
                                       std::ostream& prompt_out, bool interactive);

@@ -25,6 +25,9 @@ public:
                         std::vector<uint8_t> signature) override;
     SystemStatus deinit() override;
 
+    // Logs in with this secret when init() opens the session. The secret is wiped right after.
+    void setLogin(Secret secret, const std::string& value);
+
 private:
     std::string m_modulePath;
     DeviceType m_device;
@@ -34,6 +37,11 @@ private:
     bool m_initialized = false;           // true after C_Initialize
     CK_SLOT_ID m_slotId = 0;              // PKCS#11 slot holding the device
     CK_SESSION_HANDLE m_session = CK_INVALID_HANDLE;
+    Secret m_loginSecret = Secret::NONE;
+    std::string m_loginValue;
+
+    SystemStatus login();
+    void wipeLoginValue();
 
     CK_RV findObjects(CK_OBJECT_CLASS objectClass, std::optional<uint8_t> slot,
                       std::vector<CK_OBJECT_HANDLE>& found);
