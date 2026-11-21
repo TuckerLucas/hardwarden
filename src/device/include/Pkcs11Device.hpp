@@ -27,12 +27,12 @@ public:
 
 private:
     std::string m_modulePath;
-    DeviceType m_device;  // decides the slot range, e.g. in listKeys()
+    DeviceType m_device;
 
     void* m_library = nullptr;            // handle from dlopen
     CK_FUNCTION_LIST_PTR m_fn = nullptr;  // the module's function table
     bool m_initialized = false;           // true after C_Initialize
-    CK_SLOT_ID m_slotId = 0;              // the token we talk to
+    CK_SLOT_ID m_slotId = 0;              // PKCS#11 slot holding the device
     CK_SESSION_HANDLE m_session = CK_INVALID_HANDLE;
 
     CK_RV findObjects(CK_OBJECT_CLASS objectClass, std::optional<uint8_t> slot,

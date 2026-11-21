@@ -121,7 +121,7 @@ SystemStatus Pkcs11Device::init()
 
     m_initialized = true;
 
-    // 4. Find the first slot with a token present (first call gets the count,
+    // 4. Find the first PKCS#11 slot with a device present (first call gets the count,
     //    second call fills the list)
     CK_ULONG count = 0;
 
@@ -141,7 +141,7 @@ SystemStatus Pkcs11Device::init()
 
     m_slotId = slots[0];
 
-    // 5. Open a read/write session on that token
+    // 5. Open a read/write session on that device
     if (m_fn->C_OpenSession(m_slotId, CKF_SERIAL_SESSION | CKF_RW_SESSION, nullptr, nullptr,
                             &m_session) != CKR_OK)
     {
@@ -198,7 +198,7 @@ SystemStatus Pkcs11Device::eraseKey(uint8_t slot)
     {
         CK_RV rv = m_fn->C_DestroyObject(m_session, object);
 
-        // On TROPIC01, destroying one half erases the whole slot, so the
+        // Some devices erase the whole slot when one half of the pair is destroyed, so the
         // other half may already be gone. That's fine.
         if (rv != CKR_OK && rv != CKR_OBJECT_HANDLE_INVALID)
         {
@@ -324,7 +324,7 @@ SystemStatus Pkcs11Device::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
         return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
     }
 
-    // 1. Find every public key on the token (no slot filter)
+    // 1. Find every public key on the device (no slot filter)
     std::vector<CK_OBJECT_HANDLE> found;
 
     if (findObjects(CKO_PUBLIC_KEY, std::nullopt, found) != CKR_OK)
@@ -334,7 +334,7 @@ SystemStatus Pkcs11Device::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
     }
 
     // 2. One entry per slot number up to the device's highest slot, empty unless a key is found
-    //    there. Entries below the lowest slot (e.g. 0-4 on the YubiKey) simply stay empty.
+    //    there. Entries below the lowest slot always stay empty.
     SlotRange range = slotRange(m_device);
     pubKeys.assign(range.max + 1, {});
 
@@ -350,8 +350,7 @@ SystemStatus Pkcs11Device::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
             return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
         }
 
-        // hardwarden slots are a single byte within the device's slot range. Skip anything else,
-        // e.g. the YubiKey's attestation key (ID 25).
+        // Slots are a single byte within the device's slot range. Skip any other object.
         if (idAttr.ulValueLen != 1 || id[0] < range.min || id[0] > range.max)
         {
             continue;

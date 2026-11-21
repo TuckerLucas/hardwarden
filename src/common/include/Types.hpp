@@ -62,8 +62,8 @@ inline SlotRange slotRange(DeviceType device)
 enum class Secret
 {
     NONE,
-    PIN,             // unlocks the use of private keys (e.g. signing)
-    MANAGEMENT_KEY,  // allows changing what is stored in a slot (e.g. generating a key)
+    PIN,             // unlocks the use of private keys
+    MANAGEMENT_KEY,  // allows changing what is stored in a slot
 };
 
 inline Secret requiredSecret(DeviceType device, Operation operation)
@@ -82,7 +82,7 @@ inline Secret requiredSecret(DeviceType device, Operation operation)
                     return Secret::NONE;
             }
         default:
-            // TROPIC01 devices and device-less operations need no secret.
+            // Other devices, and device-less operations, need no secret.
             return Secret::NONE;
     }
 }

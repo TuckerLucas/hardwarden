@@ -40,7 +40,7 @@ endif()
 # ==== TROPIC01 PKCS#11 modules ====
 # The module's connection (HAL) is chosen at compile time, so it is built twice:
 # once for SPI (Raspberry Pi shield) and once for USB (USB devkit).
-# Each build brings its own libtropic. hardwarden loads the right one at runtime.
+# Each build brings its own libtropic. The right module is loaded at runtime.
 set(LIBTROPIC_PKCS11_REPO https://github.com/tropicsquare/libtropic-pkcs11.git)
 set(LIBTROPIC_PKCS11_TAG 604cb444c1deea6a73c4300b36f468083586c6bc)
 

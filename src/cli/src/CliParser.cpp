@@ -221,7 +221,8 @@ void CliParser::parseSlotOperation(Command& command, const std::vector<std::stri
 
 bool CliParser::parseSlotValue(Command& command, const std::string& value)
 {
-    // Digits only: rejects "3abc", "-1", "+3", " 3" and "", which std::stoul would partly accept.
+    // Digits only: rejects signs, whitespace and trailing characters, which std::stoul would
+    // partly accept, and empty values.
     if (value.empty() || value.find_first_not_of("0123456789") != std::string::npos)
     {
         command.error = ParseError::INVALID_VALUE;
