@@ -30,6 +30,7 @@ void CliDisplay::helpMenu()
                  "Pi shield).\n";
     std::cout
         << "                     tropic01-usb   TROPIC01 secure element over USB (USB devkit).\n";
+    std::cout << "                     yubikey        YubiKey 5 Series security key.\n";
     std::cout << "\n";
     std::cout << "        Device operations:\n";
     std::cout << "                     status         Check if the device is connected.\n";
@@ -76,6 +77,22 @@ void CliDisplay::deviceHelpMenu(DeviceType device)
             std::cout << "\n";
             std::cout << "        Run 'hwarden " << deviceTypeToString(device)
                       << " <operation> --help' for operation specific options.\n";
+            break;
+        case DeviceType::YUBIKEY:
+            std::cout << "hwarden yubikey <operation> [options]\n";
+            std::cout << "\n";
+            std::cout << "YubiKey 5 Series security key.\n";
+            std::cout << "\n";
+            std::cout << "        Key slots:   " << slotRange(device).min << "-"
+                      << slotRange(device).max << "\n";
+            std::cout << "        Curves:      ed25519, p256\n";
+            std::cout << "        Operations:  status, erase-key, generate-key, read-key, "
+                         "list-keys, sign, verify\n";
+            std::cout << "\n";
+            std::cout << "Hint:\n";
+            std::cout << "\n";
+            std::cout << "        Run 'hwarden yubikey <operation> --help' for operation "
+                         "specific options.\n";
             break;
         default:
             assert(false && "Unhandled device value in deviceHelpMenu");

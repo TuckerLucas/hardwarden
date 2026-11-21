@@ -8,6 +8,7 @@ namespace
 const std::unordered_map<std::string, DeviceType> DEVICES = {
     {"tropic01-spi", DeviceType::TROPIC01_SPI},
     {"tropic01-usb", DeviceType::TROPIC01_USB},
+    {"yubikey", DeviceType::YUBIKEY},
 };
 }
 

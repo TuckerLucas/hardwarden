@@ -1,6 +1,7 @@
 #include "CliParser.hpp"
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
 #include <string>
 
 #include "CliTestConstants.hpp"
@@ -159,6 +160,17 @@ TEST_CASE("CliParser parseCommand")
             auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
             REQUIRE(parsed_command.device == DeviceType::TROPIC01_USB);
+            REQUIRE(parsed_command.operation == Operation::STATUS);
+            REQUIRE(parsed_command.error == ParseError::NONE);
+        }
+
+        SECTION("yubikey")
+        {
+            const char* argv[] = {"hwarden", "yubikey", "status"};
+
+            auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+            REQUIRE(parsed_command.device == DeviceType::YUBIKEY);
             REQUIRE(parsed_command.operation == Operation::STATUS);
             REQUIRE(parsed_command.error == ParseError::NONE);
         }
@@ -384,6 +396,21 @@ TEST_CASE("CliParser parseCommand")
                 auto parsed_command = parser.parseCommand(std::size(argv), argv);
 
                 REQUIRE(parsed_command.error == ParseError::INVALID_VALUE);
+            }
+
+            SECTION("yubikey slot range")
+            {
+                auto [slot, expected] =
+                    GENERATE(table<std::string, ParseError>({{"4", ParseError::INVALID_VALUE},
+                                                             {"5", ParseError::NONE},
+                                                             {"24", ParseError::NONE},
+                                                             {"25", ParseError::INVALID_VALUE}}));
+
+                const char* argv[] = {"hwarden", "yubikey", "erase-key", "--slot", slot.c_str()};
+
+                auto parsed_command = parser.parseCommand(std::size(argv), argv);
+
+                REQUIRE(parsed_command.error == expected);
             }
         }
     }

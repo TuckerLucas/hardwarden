@@ -26,6 +26,7 @@ enum class DeviceType
 {
     TROPIC01_SPI,
     TROPIC01_USB,
+    YUBIKEY,
 
     NONE,
 };
@@ -49,6 +50,8 @@ inline SlotRange slotRange(DeviceType device)
         case DeviceType::TROPIC01_SPI:
         case DeviceType::TROPIC01_USB:
             return {0, 31};
+        case DeviceType::YUBIKEY:
+            return {5, 24};
         default:
             assert(false && "Unhandled device value in slotRange()");
             return {0, 0};
@@ -60,6 +63,7 @@ inline std::string deviceTypeToString(DeviceType device)
     static const std::unordered_map<DeviceType, std::string> device_map = {
         {DeviceType::TROPIC01_SPI, "tropic01-spi"},
         {DeviceType::TROPIC01_USB, "tropic01-usb"},
+        {DeviceType::YUBIKEY, "yubikey"},
         {DeviceType::NONE, ""},
     };
 
