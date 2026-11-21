@@ -8,7 +8,8 @@
 #include <cstring>
 #include <vector>
 
-Pkcs11Device::Pkcs11Device(std::string modulePath) : m_modulePath(std::move(modulePath))
+Pkcs11Device::Pkcs11Device(std::string modulePath, DeviceType device)
+    : m_modulePath(std::move(modulePath)), m_device(device)
 {
 }
 
@@ -332,8 +333,10 @@ SystemStatus Pkcs11Device::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
         return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
     }
 
-    // 2. One entry per slot, empty unless a key is found there
-    pubKeys.assign(32, {});
+    // 2. One entry per slot number up to the device's highest slot, empty unless a key is found
+    //    there. Entries below the lowest slot (e.g. 0-4 on the YubiKey) simply stay empty.
+    SlotRange range = slotRange(m_device);
+    pubKeys.assign(range.max + 1, {});
 
     for (CK_OBJECT_HANDLE object : found)
     {
@@ -347,8 +350,9 @@ SystemStatus Pkcs11Device::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
             return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
         }
 
-        // hardwarden slots are a single byte, 0-31. Skip anything else.
-        if (idAttr.ulValueLen != 1 || id[0] >= 32)
+        // hardwarden slots are a single byte within the device's slot range. Skip anything else,
+        // e.g. the YubiKey's attestation key (ID 25).
+        if (idAttr.ulValueLen != 1 || id[0] < range.min || id[0] > range.max)
         {
             continue;
         }

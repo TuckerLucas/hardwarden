@@ -5,11 +5,12 @@
 
 #include "IDevice.hpp"
 #include "Pkcs11.hpp"
+#include "Types.hpp"
 
 class Pkcs11Device : public IDevice
 {
 public:
-    explicit Pkcs11Device(std::string modulePath);
+    Pkcs11Device(std::string modulePath, DeviceType device);
     ~Pkcs11Device() override;
 
     SystemStatus init() override;
@@ -26,6 +27,7 @@ public:
 
 private:
     std::string m_modulePath;
+    DeviceType m_device;  // decides the slot range, e.g. in listKeys()
 
     void* m_library = nullptr;            // handle from dlopen
     CK_FUNCTION_LIST_PTR m_fn = nullptr;  // the module's function table

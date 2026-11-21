@@ -60,7 +60,7 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
-    Pkcs11Device se(modulePath(command.device));
+    Pkcs11Device se(modulePath(command.device), command.device);
     AuditLogger logger(getDbPath());
     DeviceManager device(se, command.device, logger);
 
