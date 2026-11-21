@@ -17,6 +17,7 @@ target_link_libraries(hwarden
 target_compile_definitions(hwarden PRIVATE
     TROPIC01_SPI_PKCS11_MODULE_PATH="${TROPIC01_SPI_PKCS11_MODULE}"
     TROPIC01_USB_PKCS11_MODULE_PATH="${TROPIC01_USB_PKCS11_MODULE}"
+    YKCS11_MODULE_PATH="${YKCS11_MODULE}"
 )
 add_dependencies(hwarden libtropic_pkcs11_spi libtropic_pkcs11_usb)
 

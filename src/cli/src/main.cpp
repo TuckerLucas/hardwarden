@@ -35,6 +35,8 @@ std::string modulePath(DeviceType device)
             return TROPIC01_SPI_PKCS11_MODULE_PATH;
         case DeviceType::TROPIC01_USB:
             return TROPIC01_USB_PKCS11_MODULE_PATH;
+        case DeviceType::YUBIKEY:
+            return YKCS11_MODULE_PATH;
         default:
             return "";
     }

@@ -76,6 +76,15 @@ ExternalProject_Add(libtropic_pkcs11_usb
 ExternalProject_Get_Property(libtropic_pkcs11_usb BINARY_DIR)
 set(TROPIC01_USB_PKCS11_MODULE "${BINARY_DIR}/libtropic_pkcs11.so")
 
+# ==== YubiKey PIV PKCS#11 module (ykcs11) ====
+# Provided by the system (Debian/Ubuntu package: ykcs11), not built here.
+find_library(YKCS11_MODULE NAMES ykcs11)
+
+if(NOT YKCS11_MODULE)
+    message(WARNING "ykcs11 not found: the yubikey device will not work. Install it with: sudo apt install ykcs11")
+    set(YKCS11_MODULE "")
+endif()
+
 # ==== CTest ====
 include(CTest)
 enable_testing()

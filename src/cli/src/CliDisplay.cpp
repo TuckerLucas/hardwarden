@@ -170,9 +170,10 @@ void CliDisplay::statusResult(SystemStatus result)
         std::cout << "Could not detect hardware: ";
 
         if (result == SystemStatus::DEVICE_ERROR_INIT)
-            std::cout << "initialisation error. Check that the security module is connected.\n";
+            std::cout
+                << "initialisation error. Check that the hardware security device is connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_STATUS)
-            std::cout << "ping failed. Check that the security module is connected.\n";
+            std::cout << "ping failed. Check that the hardware security device is connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_DEINIT)
             std::cout << "deinitialisation error.\n";
     }
@@ -216,7 +217,8 @@ void CliDisplay::eraseKeyResult(SystemStatus result, uint8_t slot)
         std::cout << "Operation failed: ";
 
         if (result == SystemStatus::DEVICE_ERROR_INIT)
-            std::cout << "initialisation error. Check that the security module is connected.\n";
+            std::cout
+                << "initialisation error. Check that the hardware security device is connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_ERASE_KEY)
             std::cout << "could not erase key.\n";
         else if (result == SystemStatus::DEVICE_ERROR_DEINIT)
@@ -237,7 +239,8 @@ void CliDisplay::generateKeyResult(SystemStatus result, Command command)
 
         if (result == SystemStatus::DEVICE_ERROR_INIT)
         {
-            std::cout << "initialisation error. Check that the security module is connected.\n";
+            std::cout
+                << "initialisation error. Check that the hardware security device is connected.\n";
         }
         else if (result == SystemStatus::DEVICE_ERROR_GENERATE_KEY_SLOT_OCCUPIED)
         {
@@ -292,7 +295,8 @@ void CliDisplay::readKeyResult(SystemStatus result, uint8_t slot, std::vector<ui
 
         if (result == SystemStatus::DEVICE_ERROR_INIT)
         {
-            std::cout << "initialisation error. Check that the security module is connected.\n";
+            std::cout
+                << "initialisation error. Check that the hardware security device is connected.\n";
         }
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT)
         {
@@ -413,14 +417,16 @@ void CliDisplay::signResult(SystemStatus result, std::vector<uint8_t> signature)
         if (result == SystemStatus::ERROR_FILE_NOT_FOUND)
             std::cout << "file not found. Check the path and try again.\n";
         else if (result == SystemStatus::DEVICE_ERROR_INIT)
-            std::cout << "initialisation error. Check that the secure element is connected.\n";
+            std::cout
+                << "initialisation error. Check that the hardware security device is connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT)
             std::cout
                 << "slot is empty. Generate a key first using 'hwarden tropic01-spi generate-key "
                    "--slot "
                    "<slot>'.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
-            std::cout << "hardware error reading key from slot. Check that the secure element is "
+            std::cout << "hardware error reading key from slot. Check that the hardware security "
+                         "device is "
                          "connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_SIGN)
             std::cout << "signing failed. Check that a key exists in the specified slot.\n";
@@ -445,14 +451,16 @@ void CliDisplay::verifyResult(SystemStatus result)
         if (result == SystemStatus::ERROR_FILE_NOT_FOUND)
             std::cout << "file not found. Check the path and try again.\n";
         else if (result == SystemStatus::DEVICE_ERROR_INIT)
-            std::cout << "initialisation error. Check that the secure element is connected.\n";
+            std::cout
+                << "initialisation error. Check that the hardware security device is connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT)
             std::cout
                 << "slot is empty. Generate a key first using 'hwarden tropic01-spi generate-key "
                    "--slot "
                    "<slot>'.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
-            std::cout << "hardware error reading key from slot. Check that the secure element is "
+            std::cout << "hardware error reading key from slot. Check that the hardware security "
+                         "device is "
                          "connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_VERIFY)
             std::cout << "invalid public key size. Public keys must be 32 or 64 bytes.\n";
