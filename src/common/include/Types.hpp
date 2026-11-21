@@ -58,6 +58,35 @@ inline SlotRange slotRange(DeviceType device)
     }
 }
 
+// The secret a device needs before an operation can run.
+enum class Secret
+{
+    NONE,
+    PIN,             // unlocks the use of private keys (e.g. signing)
+    MANAGEMENT_KEY,  // allows changing what is stored in a slot (e.g. generating a key)
+};
+
+inline Secret requiredSecret(DeviceType device, Operation operation)
+{
+    switch (device)
+    {
+        case DeviceType::YUBIKEY:
+            switch (operation)
+            {
+                case Operation::SIGN:
+                    return Secret::PIN;
+                case Operation::GENERATE_KEY:
+                case Operation::ERASE_KEY:
+                    return Secret::MANAGEMENT_KEY;
+                default:
+                    return Secret::NONE;
+            }
+        default:
+            // TROPIC01 devices and device-less operations need no secret.
+            return Secret::NONE;
+    }
+}
+
 inline std::string deviceTypeToString(DeviceType device)
 {
     static const std::unordered_map<DeviceType, std::string> device_map = {
