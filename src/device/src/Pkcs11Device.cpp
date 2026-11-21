@@ -292,7 +292,7 @@ SystemStatus Pkcs11Device::generateKey(uint8_t slot, Curve curve)
         return SystemStatus::DEVICE_ERROR_GENERATE_KEY_SLOT_OCCUPIED;
     }
 
-    // 2. Pick the mechanism and curve OID
+    // 2. Pick the mechanism and the curve, named by OID
     std::vector<CK_BYTE> ecParams;
     CK_MECHANISM mechanism = {0, nullptr, 0};
 
@@ -334,6 +334,17 @@ SystemStatus Pkcs11Device::generateKey(uint8_t slot, Curve curve)
 
     CK_RV rv = m_fn->C_GenerateKeyPair(m_session, &mechanism, publicTemplate, 4, privateTemplate, 5,
                                        &publicKey, &privateKey);
+
+    // PKCS#11 allows naming the Ed25519 curve by OID or by name. Devices accept one or the other,
+    // so the OID is tried first and the name ("edwards25519" as a PrintableString) second.
+    if (rv == CKR_ATTRIBUTE_VALUE_INVALID && curve == Curve::Ed25519)
+    {
+        ecParams = {0x13, 0x0C, 'e', 'd', 'w', 'a', 'r', 'd', 's', '2', '5', '5', '1', '9'};
+        publicTemplate[2] = {CKA_EC_PARAMS, ecParams.data(), ecParams.size()};
+
+        rv = m_fn->C_GenerateKeyPair(m_session, &mechanism, publicTemplate, 4, privateTemplate, 5,
+                                     &publicKey, &privateKey);
+    }
 
     if (rv != CKR_OK)
     {
