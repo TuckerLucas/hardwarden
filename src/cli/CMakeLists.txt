@@ -3,6 +3,7 @@ add_executable(hwarden
     src/main.cpp
     src/CliParser.cpp
     src/CliDisplay.cpp
+    src/SecretReader.cpp
 )
 
 target_include_directories(hwarden PRIVATE
@@ -26,7 +27,9 @@ install(TARGETS hwarden DESTINATION /usr/local/bin)
 # ==== Tests ====
 add_executable(test_cli
     test/CliParser.test.cpp
+    test/SecretReader.test.cpp
     src/CliParser.cpp
+    src/SecretReader.cpp
 )
 
 target_include_directories(test_cli PRIVATE
