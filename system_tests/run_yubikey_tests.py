@@ -208,17 +208,24 @@ test("sign - data (P-256)",
      cleanup=delete(18))
 
 test("sign - file (Ed25519)",
-     ["sign", "--slot", "19", "--file", "test_file.txt"],
+     ["sign", "--slot", "19", "--file", "test_file_3061_bytes.txt"],
      setup=step("generate-key", "--slot", "19"),
      cleanup=delete(19))
 
+# 3061 bytes is the largest message the device signs with an Ed25519 key.
+test("sign - file too large (Ed25519)",
+     ["sign", "--slot", "19", "--file", "test_file_4096_bytes.txt"],
+     setup=step("generate-key", "--slot", "19"),
+     cleanup=delete(19),
+     expected_exit_code=1)
+
 test("sign - file (P-256)",
-     ["sign", "--slot", "19", "--file", "test_file.txt"],
+     ["sign", "--slot", "19", "--file", "test_file_4096_bytes.txt"],
      setup=step("generate-key", "--slot", "19", "--curve", "p256"),
      cleanup=delete(19))
 
 test("sign - large file (P-256)",
-     ["sign", "--slot", "19", "--file", "large_test_file.txt"],
+     ["sign", "--slot", "19", "--file", "test_file_5001_bytes.txt"],
      setup=step("generate-key", "--slot", "19", "--curve", "p256"),
      cleanup=delete(19))
 
@@ -233,7 +240,7 @@ test("sign - key not found (data)",
      expected_exit_code=1)
 
 test("sign - key not found (file)",
-     ["sign", "--slot", "23", "--file", "test_file.txt"],
+     ["sign", "--slot", "23", "--file", "test_file_4096_bytes.txt"],
      expected_exit_code=1)
 
 # A wrong PIN uses up one attempt. The correct PIN right after resets the counter.
@@ -254,40 +261,40 @@ verify_test("verify - Ed25519 - valid data", 5, "ed25519",
             ["--data", ED25519_VALID_DATA], ["--data", ED25519_VALID_DATA], 0)
 
 verify_test("verify - Ed25519 - valid file", 5, "ed25519",
-            ["--file", "test_file.txt"], ["--file", "test_file.txt"], 0)
+            ["--file", "test_file_3061_bytes.txt"], ["--file", "test_file_3061_bytes.txt"], 0)
 
 verify_test("verify - Ed25519 - invalid data", 6, "ed25519",
             ["--data", ED25519_VALID_DATA], ["--data", "wrong_data"], 1)
 
 verify_test("verify - Ed25519 - invalid file", 6, "ed25519",
-            ["--file", "test_file.txt"], ["--file", "large_test_file.txt"], 1)
+            ["--file", "test_file_3061_bytes.txt"], ["--file", "test_file_4096_bytes.txt"], 1)
 
 verify_test("verify - Ed25519 - invalid signature + valid data", 6, "ed25519",
             ["--data", ED25519_VALID_DATA], ["--data", ED25519_VALID_DATA], 1,
             signature=INVALID_SIGNATURE)
 
 verify_test("verify - Ed25519 - invalid signature + valid file", 6, "ed25519",
-            ["--file", "test_file.txt"], ["--file", "test_file.txt"], 1,
+            ["--file", "test_file_3061_bytes.txt"], ["--file", "test_file_3061_bytes.txt"], 1,
             signature=INVALID_SIGNATURE)
 
 verify_test("verify - P-256 - valid data", 7, "p256",
             ["--data", P256_VALID_DATA], ["--data", P256_VALID_DATA], 0)
 
 verify_test("verify - P-256 - valid file", 7, "p256",
-            ["--file", "large_test_file.txt"], ["--file", "large_test_file.txt"], 0)
+            ["--file", "test_file_5001_bytes.txt"], ["--file", "test_file_5001_bytes.txt"], 0)
 
 verify_test("verify - P-256 - invalid data", 8, "p256",
             ["--data", P256_VALID_DATA], ["--data", "wrong_data"], 1)
 
 verify_test("verify - P-256 - invalid file", 8, "p256",
-            ["--file", "large_test_file.txt"], ["--file", "test_file.txt"], 1)
+            ["--file", "test_file_5001_bytes.txt"], ["--file", "test_file_4096_bytes.txt"], 1)
 
 verify_test("verify - P-256 - invalid signature + valid data", 8, "p256",
             ["--data", P256_VALID_DATA], ["--data", P256_VALID_DATA], 1,
             signature=INVALID_SIGNATURE)
 
 verify_test("verify - P-256 - invalid signature + valid file", 8, "p256",
-            ["--file", "large_test_file.txt"], ["--file", "large_test_file.txt"], 1,
+            ["--file", "test_file_5001_bytes.txt"], ["--file", "test_file_5001_bytes.txt"], 1,
             signature=INVALID_SIGNATURE)
 
 test("verify - file not found",

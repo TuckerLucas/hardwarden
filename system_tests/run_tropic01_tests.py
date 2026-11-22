@@ -136,17 +136,17 @@ run_test("sign - data (P-256)",
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "18"])
 
 run_test("sign - file (Ed25519)",
-         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "test_file.txt"],
+         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "test_file_4096_bytes.txt"],
          setup=[BINARY, DEVICE, "generate-key", "--slot", "19"],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "19"])
 
 run_test("sign - file (P-256)",
-         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "test_file.txt"],
+         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "test_file_4096_bytes.txt"],
          setup=[BINARY, DEVICE, "generate-key", "--slot", "19", "--curve", "p256"],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "19"]) 
 
 run_test("sign - large file (P-256)",
-         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "large_test_file.txt"],
+         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "test_file_5001_bytes.txt"],
          setup=[BINARY, DEVICE, "generate-key", "--slot", "19", "--curve", "p256"],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "19"])      
 
@@ -161,7 +161,7 @@ run_test("sign - key not found (data)",
          expected_exit_code=1)
 
 run_test("sign - key not found (file)",
-         [BINARY, DEVICE, "sign", "--slot", "23", "--file", "test_file.txt"],
+         [BINARY, DEVICE, "sign", "--slot", "23", "--file", "test_file_4096_bytes.txt"],
          expected_exit_code=1) 
 
 # Verify
@@ -176,10 +176,10 @@ run_test("verify - Ed25519 - valid data",
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "0"])
 
 run_test("verify - Ed25519 - valid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "0", "--file", "test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "0", "--file", "test_file_4096_bytes.txt", "--signature", sig],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "0"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "0", "--file", "test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "0", "--file", "test_file_4096_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "0"])     
 
@@ -193,10 +193,10 @@ run_test("verify - Ed25519 - invalid data",
          expected_exit_code=1)
 
 run_test("verify - Ed25519 - invalid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "large_test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "test_file_5001_bytes.txt", "--signature", sig],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "2"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "test_file_4096_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "2"],
          expected_exit_code=1)
@@ -211,10 +211,10 @@ run_test("verify - Ed25519 - invalid signature + valid data",
          expected_exit_code=1)
 
 run_test("verify - Ed25519 - invalid signature + valid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "test_file.txt", "--signature", INVALID_SIGNATURE],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "test_file_4096_bytes.txt", "--signature", INVALID_SIGNATURE],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "2"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "test_file_4096_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "2"],
          expected_exit_code=1)
@@ -228,10 +228,10 @@ run_test("verify - P-256 - valid data",
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "1"])
 
 run_test("verify - P-256 - valid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "1", "--file", "large_test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "1", "--file", "test_file_5001_bytes.txt", "--signature", sig],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "1", "--curve", "p256"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "1", "--file", "large_test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "1", "--file", "test_file_5001_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "1"])
 
@@ -245,10 +245,10 @@ run_test("verify - P-256 - invalid data",
          expected_exit_code=1)
 
 run_test("verify - P-256 - invalid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "3", "--file", "test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "3", "--file", "test_file_4096_bytes.txt", "--signature", sig],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "3", "--curve", "p256"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "3", "--file", "large_test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "3", "--file", "test_file_5001_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "3"],
          expected_exit_code=1)
@@ -263,10 +263,10 @@ run_test("verify - P-256 - invalid signature + valid data",
          expected_exit_code=1)
 
 run_test("verify - P-256 - invalid signature + valid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "large_test_file.txt", "--signature", INVALID_SIGNATURE],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "test_file_5001_bytes.txt", "--signature", INVALID_SIGNATURE],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "2", "--curve", "p256"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "large_test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "test_file_5001_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "2"],
          expected_exit_code=1)
