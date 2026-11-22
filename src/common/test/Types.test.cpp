@@ -79,3 +79,29 @@ TEST_CASE("ed25519MaxMessageSize")
         REQUIRE(ed25519MaxMessageSize(DeviceType::YUBIKEY) == 3061);
     }
 }
+
+TEST_CASE("slotRange")
+{
+    SECTION("TROPIC01 uses slots 0-31")
+    {
+        auto device = GENERATE(DeviceType::TROPIC01_SPI, DeviceType::TROPIC01_USB);
+
+        REQUIRE(slotRange(device).min == 0);
+        REQUIRE(slotRange(device).max == 31);
+    }
+
+    SECTION("YubiKey uses slots 5-24")
+    {
+        REQUIRE(slotRange(DeviceType::YUBIKEY).min == 5);
+        REQUIRE(slotRange(DeviceType::YUBIKEY).max == 24);
+    }
+}
+
+// These names are written to the audit log, so changing one splits a device's log history.
+TEST_CASE("deviceTypeToString")
+{
+    REQUIRE(deviceTypeToString(DeviceType::TROPIC01_SPI) == "tropic01-spi");
+    REQUIRE(deviceTypeToString(DeviceType::TROPIC01_USB) == "tropic01-usb");
+    REQUIRE(deviceTypeToString(DeviceType::YUBIKEY) == "yubikey");
+    REQUIRE(deviceTypeToString(DeviceType::NONE) == "");
+}
