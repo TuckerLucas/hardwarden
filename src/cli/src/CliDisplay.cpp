@@ -582,7 +582,7 @@ void CliDisplay::status_help(DeviceType device)
     std::cout << "        hwarden " << deviceTypeToString(device) << " status\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Checks if the device is connected and responding.\n";
+    std::cout << "        Check if the device is connected and responding.\n";
 }
 
 void CliDisplay::logs_help()
@@ -591,7 +591,7 @@ void CliDisplay::logs_help()
     std::cout << "        hwarden logs\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Display audit log of all operations performed on devices.\n";
+    std::cout << "        Display the audit log of all operations performed on devices.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
     std::cout << "        hwarden logs\n";
@@ -607,11 +607,11 @@ void CliDisplay::eraseKey_help(DeviceType device)
     std::cout << "        hwarden " << deviceTypeToString(device) << " erase-key --slot <slot>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Erases the key stored in the specified slot on the device.\n";
+    std::cout << "        Erase the key stored in the specified slot on the device.\n";
     printSecretNote(device, Operation::ERASE_KEY);
     std::cout << "\n";
     std::cout << "Options:\n";
-    std::cout << "        --slot " << slotRangeText(device) << "   Slot number to erase.\n";
+    std::cout << "        --slot " << slotRangeText(device) << "   Slot to erase the key from.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
     std::cout << "        hwarden " << deviceTypeToString(device) << " erase-key --slot " << low
@@ -630,13 +630,13 @@ void CliDisplay::generateKey_help(DeviceType device)
               << " generate-key --slot <slot> [--curve <curve>]\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Generates an ECC key pair in the specified slot on the device.\n";
+    std::cout << "        Generate an ECC key pair in the specified slot on the device.\n";
     printSecretNote(device, Operation::GENERATE_KEY);
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --slot  " << slotRangeText(device)
               << "    Slot to generate the key in.\n";
-    std::cout << "        --curve <curve>   Curve to use for key generation\n";
+    std::cout << "        --curve <curve>   Curve to use for key generation.\n";
     std::cout << "                          ed25519   Edwards curve (default)\n";
     std::cout << "                          p256      NIST P-256 curve\n";
     std::cout << "\n";
@@ -661,7 +661,7 @@ void CliDisplay::readKey_help(DeviceType device)
     std::cout << "        hwarden " << deviceTypeToString(device) << " read-key --slot <slot>\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Reads the public key stored in the specified slot on the device.\n";
+    std::cout << "        Read the public key stored in the specified slot on the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --slot " << slotRangeText(device)
@@ -680,7 +680,7 @@ void CliDisplay::listKeys_help(DeviceType device)
     std::cout << "        hwarden " << deviceTypeToString(device) << " list-keys [--verbose]\n";
     std::cout << "\n";
     std::cout << "Description:\n";
-    std::cout << "        Display all public keys stored on the device.\n";
+    std::cout << "        List all public keys stored on the device.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --verbose   Show complete key values.\n";
@@ -710,8 +710,7 @@ void CliDisplay::sign_help(DeviceType device)
     printSecretNote(device, Operation::SIGN);
     std::cout << "\n";
     std::cout << "Options:\n";
-    std::cout << "        --slot " << slotRangeText(device)
-              << "   Slot containing the key to sign with (required).\n";
+    std::cout << "        --slot " << slotRangeText(device) << "   Slot to sign with.\n";
     std::cout << "        --data <data>   Data string to sign (mutually exclusive with --file).\n";
     std::cout << "        --file <path>   Path to file to sign (mutually exclusive with --data).\n";
     std::cout << "\n";
@@ -743,8 +742,7 @@ void CliDisplay::verify_help(DeviceType device)
     std::cout << "        the specified slot.\n";
     std::cout << "\n";
     std::cout << "Options:\n";
-    std::cout << "        --slot " << slotRangeText(device)
-              << "      Slot containing the public key (required).\n";
+    std::cout << "        --slot " << slotRangeText(device) << "      Slot to verify with.\n";
     std::cout
         << "        --data <data>      Data that was signed (mutually exclusive with --file).\n";
     std::cout << "        --file <path>      Path to file that was signed (mutually exclusive with "
