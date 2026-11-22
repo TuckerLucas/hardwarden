@@ -41,3 +41,26 @@ TEST_CASE("requiredSecret")
         REQUIRE(requiredSecret(DeviceType::NONE, Operation::HELP) == Secret::NONE);
     }
 }
+
+TEST_CASE("defaultSecret")
+{
+    SECTION("YubiKey has factory defaults for the PIN and the management key")
+    {
+        REQUIRE(defaultSecret(DeviceType::YUBIKEY, Secret::PIN) == "123456");
+        REQUIRE(defaultSecret(DeviceType::YUBIKEY, Secret::MANAGEMENT_KEY) ==
+                "010203040506070801020304050607080102030405060708");
+    }
+
+    SECTION("Devices without secrets have no defaults")
+    {
+        auto device = GENERATE(DeviceType::TROPIC01_SPI, DeviceType::TROPIC01_USB);
+        auto secret = GENERATE(Secret::PIN, Secret::MANAGEMENT_KEY);
+
+        REQUIRE_FALSE(defaultSecret(device, secret).has_value());
+    }
+
+    SECTION("No secret has no default")
+    {
+        REQUIRE_FALSE(defaultSecret(DeviceType::YUBIKEY, Secret::NONE).has_value());
+    }
+}

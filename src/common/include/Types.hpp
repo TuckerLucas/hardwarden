@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -84,6 +85,25 @@ inline Secret requiredSecret(DeviceType device, Operation operation)
         default:
             // Other devices, and device-less operations, need no secret.
             return Secret::NONE;
+    }
+}
+
+// The factory default of a secret, used when the user leaves the prompt empty.
+inline std::optional<std::string> defaultSecret(DeviceType device, Secret secret)
+{
+    if (device != DeviceType::YUBIKEY)
+    {
+        return std::nullopt;
+    }
+
+    switch (secret)
+    {
+        case Secret::PIN:
+            return "123456";
+        case Secret::MANAGEMENT_KEY:
+            return "010203040506070801020304050607080102030405060708";
+        default:
+            return std::nullopt;
     }
 }
 

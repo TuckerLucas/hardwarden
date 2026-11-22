@@ -66,13 +66,21 @@ int main(int argc, const char* argv[])
 
     if (secret != Secret::NONE)
     {
-        std::optional<std::string> value =
-            readSecret(secret == Secret::PIN ? "Enter PIN: " : "Enter management key: ");
+        const std::optional<std::string> fallback = defaultSecret(command.device, secret);
+        std::string prompt = (secret == Secret::PIN) ? "Enter PIN" : "Enter management key";
+        prompt += fallback ? " [blank to use default]: " : ": ";
+
+        std::optional<std::string> value = readSecret(prompt);
 
         if (!value)
         {
-            display.secretCancelled(secret);
-            return 1;
+            if (!fallback)
+            {
+                display.secretCancelled(secret);
+                return 1;
+            }
+
+            value = fallback;
         }
 
         se.setLogin(secret, *value);
