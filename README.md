@@ -21,25 +21,8 @@ sudo apt install build-essential
 sudo apt install cmake
 sudo apt install libsqlite3-dev
 sudo apt install libssl-dev
-```
-
-For the YubiKey, also install its PKCS#11 module and the smart card service. Install them before building, so the build can find the module:
-
-```bash
-sudo apt install ykcs11
-sudo apt install pcscd
-```
-
-On some systems, such as Debian 13, `pcscd` denies access to users who are not logged in locally (for example over SSH) with "Access denied". To allow your user, create `/etc/polkit-1/rules.d/50-pcscd.rules` with the following content, replacing `your_user`:
-
-```js
-polkit.addRule(function(action, subject) {
-    if ((action.id == "org.debian.pcsc-lite.access_pcsc" ||
-         action.id == "org.debian.pcsc-lite.access_card") &&
-        subject.user == "your_user") {
-        return polkit.Result.YES;
-    }
-});
+sudo apt install ykcs11      # YubiKey only, install before building
+sudo apt install pcscd       # YubiKey only
 ```
 
 ## Building and installing
@@ -57,24 +40,22 @@ sudo make install
 
 ## Supported operations
 
+Slots and curves depend on the device. Run `hwarden <device> --help` to see them.
+
 | Operation | Description | Options |
 |---------|-------------|---------|
 | `status` | Check if the hardware device is connected | — |
 | `logs` | Display the full audit log (deviceless) | — |
-| `generate-key` | Generate an ECC key pair in a hardware slot | `<--slot <slot>>` `[--curve <ed25519 \| p256>]` |
+| `generate-key` | Generate an ECC key pair in a hardware slot | `<--slot <slot>>` `[--curve <curve>]` |
 | `erase-key` | Erase the key stored in a slot | `<--slot <slot>>` |
 | `read-key` | Read back the public key from a slot | `<--slot <slot>>` |
 | `list-keys` | List all public keys stored on the hardware device | `[--verbose]` |
 | `sign` | Sign data or a file using a hardware backed key | `<--slot <slot>>` `<--data <data> \| --file <path>>` |
 | `verify` | Verify a signature using a hardware backed key | `<--slot <slot>>` `<--data <data> \| --file <path>>` `<--signature <signature>>` |
 
-Slot ranges and supported curves differ per device. Run `hwarden <device> --help` to see them.
-
 ## Quick start
 
-The commands below use the TROPIC01 Raspberry Pi shield as an example. For the USB devkit, replace `tropic01-spi` with `tropic01-usb`.
-
-The YubiKey uses slots 5-24 and asks for its PIN when signing, and for its management key when generating or erasing a key. Leave the prompt blank to use the factory default.
+The commands below use `tropic01-spi` as an example.
 
 ```bash
 # Confirm the hardware device is connected
