@@ -1,11 +1,11 @@
-import subprocess
+"""System tests for TROPIC01 devices. Usage: python3 run_tropic01_tests.py <device>"""
+
 import sys
 
-BINARY = "../build/src/cli/hwarden"
+from helpers import (BINARY, ED25519_VALID_DATA, INVALID_SIGNATURE, P256_VALID_DATA,
+                     confirm_erase, finish, make_get_signature, print_header, run_command,
+                     run_test)
 
-ED25519_VALID_DATA = "hello"
-P256_VALID_DATA = "hardwarden"
-INVALID_SIGNATURE = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 DEVICES = ["tropic01-spi", "tropic01-usb"]
 
 if len(sys.argv) != 2 or sys.argv[1] not in DEVICES:
@@ -15,99 +15,8 @@ if len(sys.argv) != 2 or sys.argv[1] not in DEVICES:
 
 DEVICE = sys.argv[1]
 
-def extract_signature_from_output(output):
-    """Extract hex signature from hardwarden sign command output.
-    
-    WARNING: This parsing depends on CliDisplay::signResult() format.
-    If that format changes, this function must be updated.
-    """
-    lines = output.split('\n')
-    signature = ""
-    in_sig_block = False
-    
-    for line in lines:
-        # Enter signature block after "Signature:" line
-        if "Signature:" in line:
-            in_sig_block = True
-            continue
-        
-        # Skip dash lines
-        if line.startswith('-') or line.strip() == "":
-            if in_sig_block and signature:  # Exit if we've already collected sig
-                break
-            continue
-        
-        # Collect hex lines
-        if in_sig_block and line.strip():
-            if all(c in '0123456789abcdefABCDEF' for c in line.strip()):
-                signature += line.strip()
-    
-    return signature if signature else None
-
-def make_get_signature(sign_command):
-    """Factory function that creates a signature extractor for a specific sign command"""
-    def get_signature():
-        sign_result = run_command(sign_command)
-        return extract_signature_from_output(sign_result.stdout)
-    return get_signature
-
-def run_command(command):
-    return subprocess.run(command, capture_output=True, text=True)
-
-def run_test(description, command, expected_exit_code=0, setup=None, cleanup=None):
-    setup_result = None
-    
-    if setup:
-        if isinstance(setup[0], list) or callable(setup[0]):
-            # List of commands/callables
-            for s in setup:
-                if callable(s):
-                    setup_result = s()
-                else:
-                    run_command(s)
-        else:
-            # Single command
-            run_command(setup)
-
-    # If command is callable, pass setup_result to it
-    if callable(command):
-        actual_command = command(setup_result)
-    else:
-        actual_command = command
-
-    result = run_command(actual_command)
-
-    if cleanup:
-        if isinstance(cleanup[0], list):
-            for c in cleanup:
-                run_command(c)
-        else:
-            run_command(cleanup)
-
-    if result.returncode == expected_exit_code:
-        print(f"\033[92mPASS\033[0m: {description}")
-    else:
-        print(f"\033[91mFAIL\033[0m: {description} (expected {expected_exit_code}, got {result.returncode})")
-
-
-
-print(f"\033[93m{'=' * 50}\033[0m")
-print(f"\033[93mWARNING: System tests will erase ALL keys from\033[0m")
-print(f"\033[93mthe {DEVICE} device before running.\033[0m")
-print()
-print(f"\033[93mDo NOT run on a production device.\033[0m")
-print(f"\033[93m{'=' * 50}\033[0m")
-print()
-response = input("Continue? (yes/no): ")
-if response.lower() != "yes":
-    print("Aborted.")
-    exit(0)
-
-
-
-print("\n" + "="*50)
-print("Running System Tests")
-print("="*50 + "\n")
+confirm_erase(DEVICE)
+print_header()
 
 print("Preparing the device...")
 for slot in range(32):
@@ -377,4 +286,4 @@ run_test("verify - missing device",
           "--signature", INVALID_SIGNATURE],
          expected_exit_code=1)
 
-print("")    
+finish()
