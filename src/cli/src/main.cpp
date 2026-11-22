@@ -145,7 +145,7 @@ int main(int argc, const char* argv[])
 
             result = device.readKey(slot, pubKey);
 
-            display.readKeyResult(result, slot, pubKey);
+            display.readKeyResult(result, command.device, slot, pubKey);
 
             break;
         }
@@ -181,7 +181,7 @@ int main(int argc, const char* argv[])
 
                 if (!file.is_open())
                 {
-                    display.signResult(SystemStatus::ERROR_FILE_NOT_FOUND, {});
+                    display.signResult(SystemStatus::ERROR_FILE_NOT_FOUND, command.device, {});
                     return 1;
                 }
 
@@ -191,7 +191,7 @@ int main(int argc, const char* argv[])
 
             result = device.sign(slot, payload, signature, dataSource, filepath);
 
-            display.signResult(result, signature);
+            display.signResult(result, command.device, signature);
 
             break;
         }
@@ -217,7 +217,7 @@ int main(int argc, const char* argv[])
 
                 if (!file.is_open())
                 {
-                    display.verifyResult(SystemStatus::ERROR_FILE_NOT_FOUND);
+                    display.verifyResult(SystemStatus::ERROR_FILE_NOT_FOUND, command.device);
                     return 1;
                 }
 
@@ -229,7 +229,7 @@ int main(int argc, const char* argv[])
 
             result = device.verify(slot, payload, signature, dataSource, filepath);
 
-            display.verifyResult(result);
+            display.verifyResult(result, command.device);
 
             break;
         }

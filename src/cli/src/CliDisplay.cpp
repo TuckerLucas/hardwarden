@@ -284,7 +284,8 @@ void CliDisplay::generateKeyResult(SystemStatus result, Command command)
         else if (result == SystemStatus::DEVICE_ERROR_GENERATE_KEY_SLOT_OCCUPIED)
         {
             std::cout << "slot " << command.options["slot"] << " already contains a key.\n";
-            std::cout << "Run 'hwarden tropic01-spi erase-key --slot " << command.options["slot"]
+            std::cout << "Run 'hwarden " << deviceTypeToString(command.device)
+                      << " erase-key --slot " << command.options["slot"]
                       << "' to erase it first.\n";
         }
         else if (result == SystemStatus::DEVICE_ERROR_GENERATE_KEY_HW_ERROR)
@@ -299,7 +300,8 @@ void CliDisplay::generateKeyResult(SystemStatus result, Command command)
     }
 }
 
-void CliDisplay::readKeyResult(SystemStatus result, uint8_t slot, std::vector<uint8_t> pubKey)
+void CliDisplay::readKeyResult(SystemStatus result, DeviceType device, uint8_t slot,
+                               std::vector<uint8_t> pubKey)
 {
     if (result == SystemStatus::OK)
     {
@@ -341,8 +343,8 @@ void CliDisplay::readKeyResult(SystemStatus result, uint8_t slot, std::vector<ui
         {
             std::cout << "slot " << static_cast<int>(slot) << " is empty.";
             std::cout << "\n";
-            std::cout << "Run 'hwarden tropic01-spi generate-key --slot " << static_cast<int>(slot)
-                      << "' to generate a key first.\n";
+            std::cout << "Run 'hwarden " << deviceTypeToString(device) << " generate-key --slot "
+                      << static_cast<int>(slot) << "' to generate a key first.\n";
         }
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
         {
@@ -430,7 +432,7 @@ void CliDisplay::listKeysResult(SystemStatus result, Command command,
     std::cout << occupied << " key(s) found\n\n";
 }
 
-void CliDisplay::signResult(SystemStatus result, std::vector<uint8_t> signature)
+void CliDisplay::signResult(SystemStatus result, DeviceType device, std::vector<uint8_t> signature)
 {
     if (result == SystemStatus::OK)
     {
@@ -463,10 +465,8 @@ void CliDisplay::signResult(SystemStatus result, std::vector<uint8_t> signature)
             std::cout
                 << "initialisation error. Check that the hardware security device is connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT)
-            std::cout
-                << "slot is empty. Generate a key first using 'hwarden tropic01-spi generate-key "
-                   "--slot "
-                   "<slot>'.\n";
+            std::cout << "slot is empty. Generate a key first using 'hwarden "
+                      << deviceTypeToString(device) << " generate-key --slot <slot>'.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
             std::cout << "hardware error reading key from slot. Check that the hardware security "
                          "device is "
@@ -481,7 +481,7 @@ void CliDisplay::signResult(SystemStatus result, std::vector<uint8_t> signature)
     }
 }
 
-void CliDisplay::verifyResult(SystemStatus result)
+void CliDisplay::verifyResult(SystemStatus result, DeviceType device)
 {
     if (result == SystemStatus::OK)
     {
@@ -497,10 +497,8 @@ void CliDisplay::verifyResult(SystemStatus result)
             std::cout
                 << "initialisation error. Check that the hardware security device is connected.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_EMPTY_SLOT)
-            std::cout
-                << "slot is empty. Generate a key first using 'hwarden tropic01-spi generate-key "
-                   "--slot "
-                   "<slot>'.\n";
+            std::cout << "slot is empty. Generate a key first using 'hwarden "
+                      << deviceTypeToString(device) << " generate-key --slot <slot>'.\n";
         else if (result == SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR)
             std::cout << "hardware error reading key from slot. Check that the hardware security "
                          "device is "
@@ -542,6 +540,10 @@ void CliDisplay::logs_help()
 
 void CliDisplay::eraseKey_help(DeviceType device)
 {
+    const SlotRange range = slotRange(device);
+    const unsigned int low = range.min;
+    const unsigned int high = range.max;
+
     std::cout << "Usage:\n";
     std::cout << "        hwarden " << deviceTypeToString(device) << " erase-key --slot <slot>\n";
     std::cout << "\n";
@@ -552,12 +554,17 @@ void CliDisplay::eraseKey_help(DeviceType device)
     std::cout << "        --slot " << slotRangeText(device) << "   Slot number to erase.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hwarden " << deviceTypeToString(device) << " erase-key --slot 0\n";
-    std::cout << "        hwarden " << deviceTypeToString(device) << " erase-key --slot 28\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " erase-key --slot " << low
+              << "\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " erase-key --slot " << high
+              << "\n";
 }
 
 void CliDisplay::generateKey_help(DeviceType device)
 {
+    const SlotRange range = slotRange(device);
+    const unsigned int mid = (range.min + range.max) / 2;
+
     std::cout << "Usage:\n";
     std::cout << "        hwarden " << deviceTypeToString(device)
               << " generate-key --slot <slot> [--curve <curve>]\n";
@@ -573,17 +580,22 @@ void CliDisplay::generateKey_help(DeviceType device)
     std::cout << "                          p256      NIST P-256 curve\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hwarden " << deviceTypeToString(device) << " generate-key --slot 3\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " generate-key --slot " << mid
+              << "\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " generate-key --slot " << mid
+              << " --curve ed25519\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " generate-key --slot " << mid
+              << " --curve p256\n";
     std::cout << "        hwarden " << deviceTypeToString(device)
-              << " generate-key --slot 3 --curve ed25519\n";
-    std::cout << "        hwarden " << deviceTypeToString(device)
-              << " generate-key --slot 3 --curve p256\n";
-    std::cout << "        hwarden " << deviceTypeToString(device)
-              << " generate-key --curve p256 --slot 3\n";
+              << " generate-key --curve p256 --slot " << mid << "\n";
 }
 
 void CliDisplay::readKey_help(DeviceType device)
 {
+    const SlotRange range = slotRange(device);
+    const unsigned int low = range.min;
+    const unsigned int high = range.max;
+
     std::cout << "Usage:\n";
     std::cout << "        hwarden " << deviceTypeToString(device) << " read-key --slot <slot>\n";
     std::cout << "\n";
@@ -595,8 +607,10 @@ void CliDisplay::readKey_help(DeviceType device)
               << "   Slot to read the public key from.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hwarden " << deviceTypeToString(device) << " read-key --slot 2\n";
-    std::cout << "        hwarden " << deviceTypeToString(device) << " read-key --slot 31\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " read-key --slot " << low
+              << "\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " read-key --slot " << high
+              << "\n";
 }
 
 void CliDisplay::listKeys_help(DeviceType device)
@@ -617,6 +631,11 @@ void CliDisplay::listKeys_help(DeviceType device)
 
 void CliDisplay::sign_help(DeviceType device)
 {
+    const SlotRange range = slotRange(device);
+    const unsigned int low = range.min;
+    const unsigned int mid = (range.min + range.max) / 2;
+    const unsigned int high = range.max;
+
     std::cout << "Usage:\n";
     std::cout << "        hwarden " << deviceTypeToString(device)
               << " sign --slot <slot> --data <data>\n";
@@ -635,18 +654,22 @@ void CliDisplay::sign_help(DeviceType device)
     std::cout << "        --file <path>   Path to file to sign (mutually exclusive with --data).\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " sign --slot " << low
+              << " --data \"hello\"\n";
+    std::cout << "        hwarden " << deviceTypeToString(device) << " sign --slot " << mid
+              << " --file document.pdf\n";
     std::cout << "        hwarden " << deviceTypeToString(device)
-              << " sign --slot 0 --data \"hello\"\n";
+              << " sign --data \"hello\" --slot " << high << "\n";
     std::cout << "        hwarden " << deviceTypeToString(device)
-              << " sign --slot 15 --file document.pdf\n";
-    std::cout << "        hwarden " << deviceTypeToString(device)
-              << " sign --data \"hello\" --slot 20\n";
-    std::cout << "        hwarden " << deviceTypeToString(device)
-              << " sign --file document.pdf --slot 12\n";
+              << " sign --file document.pdf --slot " << mid << "\n";
 }
 
 void CliDisplay::verify_help(DeviceType device)
 {
+    const SlotRange range = slotRange(device);
+    const unsigned int low = range.min;
+    const unsigned int mid = (range.min + range.max) / 2;
+
     std::cout << "Usage:\n";
     std::cout << "        hwarden " << deviceTypeToString(device)
               << " verify --slot <slot> --data <data> --signature <hex>\n";
@@ -667,11 +690,11 @@ void CliDisplay::verify_help(DeviceType device)
     std::cout << "        --signature <hex>  Signature in hex format (required).\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
-    std::cout << "        hwarden " << deviceTypeToString(device)
-              << " verify --slot 0 --data \"hello\" --signature "
+    std::cout << "        hwarden " << deviceTypeToString(device) << " verify --slot " << low
+              << " --data \"hello\" --signature "
                  "ab12cd34...\n";
-    std::cout << "        hwarden " << deviceTypeToString(device)
-              << " verify --slot 15 --file document.pdf --signature "
+    std::cout << "        hwarden " << deviceTypeToString(device) << " verify --slot " << mid
+              << " --file document.pdf --signature "
                  "ab12cd34...\n";
 }
 

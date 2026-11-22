@@ -19,11 +19,12 @@ public:
     void logsResult(SystemStatus result, std::vector<AuditEntry> entries);
     void eraseKeyResult(SystemStatus result, uint8_t slot);
     void generateKeyResult(SystemStatus result, Command command);
-    void readKeyResult(SystemStatus result, uint8_t slot, std::vector<uint8_t> pubKey);
+    void readKeyResult(SystemStatus result, DeviceType device, uint8_t slot,
+                       std::vector<uint8_t> pubKey);
     void listKeysResult(SystemStatus result, Command command,
                         std::vector<std::vector<uint8_t>> pubKeys);
-    void signResult(SystemStatus result, std::vector<uint8_t> signature);
-    void verifyResult(SystemStatus result);
+    void signResult(SystemStatus result, DeviceType device, std::vector<uint8_t> signature);
+    void verifyResult(SystemStatus result, DeviceType device);
     void secretCancelled(Secret secret);
 
     // operation specific help menu functions
