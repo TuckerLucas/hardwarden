@@ -747,7 +747,7 @@ void CliDisplay::verify_help(DeviceType device)
         << "        --data <data>      Data that was signed (mutually exclusive with --file).\n";
     std::cout << "        --file <path>      Path to file that was signed (mutually exclusive with "
                  "--data).\n";
-    std::cout << "        --signature <hex>  Signature in hex format (required).\n";
+    std::cout << "        --signature <hex>  Signature in hex format.\n";
     std::cout << "\n";
     std::cout << "Examples:\n";
     std::cout << "        hwarden " << deviceTypeToString(device) << " verify --slot " << low
