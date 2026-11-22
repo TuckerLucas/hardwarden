@@ -6,12 +6,12 @@ Hardwarden is a command line tool for cryptographic key management, digital sign
 
 ## Devices
 
-| Device | Name | Type | Connection | Status |
-|--------|------|------|------------|--------|
-| [TROPIC01](https://www.tropicsquare.com/tropic01) Raspberry Pi shield | `tropic01-spi` | Secure element | SPI | Supported |
-| [TROPIC01](https://www.tropicsquare.com/tropic01) USB devkit | `tropic01-usb` | Secure element | USB | Supported |
-| [YubiKey 5 Series](https://www.yubico.com/products/yubikey-5-overview/) | `yubikey` | Security key | USB | Supported |
-| [Nitrokey HSM 2](https://shop.nitrokey.com/shop/nkhs2-nitrokey-hsm-2-7) | — | HSM | USB | Planned |
+| Device | Name | Type | Status |
+|--------|------|------|--------|
+| [TROPIC01](https://www.tropicsquare.com/tropic01) Raspberry Pi shield | `tropic01-spi` | Secure element | Supported |
+| [TROPIC01](https://www.tropicsquare.com/tropic01) USB devkit | `tropic01-usb` | Secure element | Supported |
+| [YubiKey 5 Series](https://www.yubico.com/products/yubikey-5-overview/) | `yubikey` | Security key | Supported |
+| [Nitrokey HSM 2](https://shop.nitrokey.com/shop/nkhs2-nitrokey-hsm-2-7) | — | HSM | In progress |
 
 ## Dependencies
 
@@ -21,7 +21,7 @@ sudo apt install build-essential
 sudo apt install cmake
 sudo apt install libsqlite3-dev
 sudo apt install libssl-dev
-sudo apt install ykcs11      # YubiKey only, install before building
+sudo apt install ykcs11      # YubiKey only
 sudo apt install pcscd       # YubiKey only
 ```
 
