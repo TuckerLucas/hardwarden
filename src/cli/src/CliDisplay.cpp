@@ -11,6 +11,62 @@ std::string slotRangeText(DeviceType device)
 
     return "<" + std::to_string(range.min) + "-" + std::to_string(range.max) + ">";
 }
+// The secrets a device asks for, and for which operations, or "none".
+std::string secretsText(DeviceType device)
+{
+    const Operation operations[] = {
+        Operation::STATUS,    Operation::ERASE_KEY, Operation::GENERATE_KEY, Operation::READ_KEY,
+        Operation::LIST_KEYS, Operation::SIGN,      Operation::VERIFY};
+    std::string pin_ops;
+    std::string key_ops;
+
+    for (Operation operation : operations)
+    {
+        std::string& list = (requiredSecret(device, operation) == Secret::PIN) ? pin_ops : key_ops;
+
+        if (requiredSecret(device, operation) == Secret::NONE)
+        {
+            continue;
+        }
+
+        list += (list.empty() ? "" : ", ") + operationToString(operation);
+    }
+
+    std::string text;
+
+    if (!pin_ops.empty())
+    {
+        text += "PIN (" + pin_ops + ")";
+    }
+
+    if (!key_ops.empty())
+    {
+        text += (text.empty() ? "" : ", ") + std::string("management key (") + key_ops + ")";
+    }
+
+    return text.empty() ? "none" : text;
+}
+
+// One description line saying which secret the operation asks for, on devices that need one.
+void printSecretNote(DeviceType device, Operation operation)
+{
+    Secret secret = requiredSecret(device, operation);
+
+    if (secret == Secret::NONE)
+    {
+        return;
+    }
+
+    std::cout << "        Asks for the device's "
+              << (secret == Secret::PIN ? "PIN" : "management key") << ".";
+
+    if (defaultSecret(device, secret))
+    {
+        std::cout << " Leave it blank to use the factory default.";
+    }
+
+    std::cout << "\n";
+}
 }  // namespace
 
 void CliDisplay::helpMenu()
@@ -70,6 +126,7 @@ void CliDisplay::deviceHelpMenu(DeviceType device)
             std::cout << "        Key slots:   " << slotRange(device).min << "-"
                       << slotRange(device).max << "\n";
             std::cout << "        Curves:      ed25519, p256\n";
+            std::cout << "        Secrets:     " << secretsText(device) << "\n";
             std::cout << "        Operations:  status, erase-key, generate-key, read-key, "
                          "list-keys, sign, verify\n";
             std::cout << "\n";
@@ -86,6 +143,7 @@ void CliDisplay::deviceHelpMenu(DeviceType device)
             std::cout << "        Key slots:   " << slotRange(device).min << "-"
                       << slotRange(device).max << "\n";
             std::cout << "        Curves:      ed25519, p256\n";
+            std::cout << "        Secrets:     " << secretsText(device) << "\n";
             std::cout << "        Operations:  status, erase-key, generate-key, read-key, "
                          "list-keys, sign, verify\n";
             std::cout << "\n";
@@ -550,6 +608,7 @@ void CliDisplay::eraseKey_help(DeviceType device)
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Erases the key stored in the specified slot on the device.\n";
+    printSecretNote(device, Operation::ERASE_KEY);
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --slot " << slotRangeText(device) << "   Slot number to erase.\n";
@@ -572,6 +631,7 @@ void CliDisplay::generateKey_help(DeviceType device)
     std::cout << "\n";
     std::cout << "Description:\n";
     std::cout << "        Generates an ECC key pair in the specified slot on the device.\n";
+    printSecretNote(device, Operation::GENERATE_KEY);
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --slot  " << slotRangeText(device)
@@ -647,6 +707,7 @@ void CliDisplay::sign_help(DeviceType device)
     std::cout << "        Sign data or a file using a hardware-backed key stored in the specified "
                  "slot.\n";
     std::cout << "        The private key never leaves the device.\n";
+    printSecretNote(device, Operation::SIGN);
     std::cout << "\n";
     std::cout << "Options:\n";
     std::cout << "        --slot " << slotRangeText(device)
