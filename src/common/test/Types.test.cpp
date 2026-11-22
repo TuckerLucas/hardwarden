@@ -64,3 +64,18 @@ TEST_CASE("defaultSecret")
         REQUIRE_FALSE(defaultSecret(DeviceType::YUBIKEY, Secret::NONE).has_value());
     }
 }
+
+TEST_CASE("ed25519MaxMessageSize")
+{
+    SECTION("TROPIC01 signs Ed25519 messages up to 4096 bytes")
+    {
+        auto device = GENERATE(DeviceType::TROPIC01_SPI, DeviceType::TROPIC01_USB);
+
+        REQUIRE(ed25519MaxMessageSize(device) == 4096);
+    }
+
+    SECTION("YubiKey signs Ed25519 messages up to 3061 bytes")
+    {
+        REQUIRE(ed25519MaxMessageSize(DeviceType::YUBIKEY) == 3061);
+    }
+}

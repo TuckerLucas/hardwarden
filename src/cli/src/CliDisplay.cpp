@@ -474,8 +474,9 @@ void CliDisplay::signResult(SystemStatus result, DeviceType device, std::vector<
         else if (result == SystemStatus::DEVICE_ERROR_SIGN)
             std::cout << "signing failed. Check that a key exists in the specified slot.\n";
         else if (result == SystemStatus::DEVICE_ERROR_SIGN_PAYLOAD_TOO_LARGE)
-            std::cout
-                << "payload too large for Ed25519 key. Use a P-256 key for larger payloads.\n";
+            std::cout << "payload too large for an Ed25519 key on this device (maximum "
+                      << ed25519MaxMessageSize(device)
+                      << " bytes). Use a P-256 key for larger payloads.\n";
         else if (result == SystemStatus::DEVICE_ERROR_DEINIT)
             std::cout << "deinitialisation error.\n";
     }

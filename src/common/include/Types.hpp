@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -56,6 +57,23 @@ inline SlotRange slotRange(DeviceType device)
         default:
             assert(false && "Unhandled device value in slotRange()");
             return {0, 0};
+    }
+}
+
+// The longest message a device can sign with an Ed25519 key. Ed25519 signs the whole message,
+// so the device has to receive all of it at once.
+inline std::size_t ed25519MaxMessageSize(DeviceType device)
+{
+    switch (device)
+    {
+        case DeviceType::TROPIC01_SPI:
+        case DeviceType::TROPIC01_USB:
+            return 4096;
+        case DeviceType::YUBIKEY:
+            return 3061;
+        default:
+            assert(false && "Unhandled device value in ed25519MaxMessageSize()");
+            return 0;
     }
 }
 
