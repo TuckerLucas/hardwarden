@@ -498,7 +498,8 @@ TEST_CASE("sign")
             SECTION("Ed25519")
             {
                 mock.readKeyPubKey = mock_ed25519_public_key;
-                payload = std::vector<uint8_t>(ED25519_MAX_MSG_SIZE, 0x00);
+                payload =
+                    std::vector<uint8_t>(ed25519MaxMessageSize(DeviceType::TROPIC01_SPI), 0x00);
 
                 auto result = device.sign(slot, payload, signature, dataSource);
 
@@ -510,7 +511,8 @@ TEST_CASE("sign")
             SECTION("P-256")
             {
                 mock.readKeyPubKey = mock_p256_public_key;
-                payload = std::vector<uint8_t>(ED25519_MAX_MSG_SIZE + 1, 0x00);
+                payload =
+                    std::vector<uint8_t>(ed25519MaxMessageSize(DeviceType::TROPIC01_SPI) + 1, 0x00);
 
                 auto result = device.sign(slot, payload, signature, dataSource);
 
@@ -527,7 +529,8 @@ TEST_CASE("sign")
             SECTION("Ed25519")
             {
                 mock.readKeyPubKey = mock_ed25519_public_key;
-                payload = std::vector<uint8_t>(ED25519_MAX_MSG_SIZE, 0x00);
+                payload =
+                    std::vector<uint8_t>(ed25519MaxMessageSize(DeviceType::TROPIC01_SPI), 0x00);
 
                 auto result = device.sign(slot, payload, signature, dataSource, filepath);
 
@@ -539,7 +542,8 @@ TEST_CASE("sign")
             SECTION("P-256")
             {
                 mock.readKeyPubKey = mock_p256_public_key;
-                payload = std::vector<uint8_t>(ED25519_MAX_MSG_SIZE + 1, 0x00);
+                payload =
+                    std::vector<uint8_t>(ed25519MaxMessageSize(DeviceType::TROPIC01_SPI) + 1, 0x00);
 
                 auto result = device.sign(slot, payload, signature, dataSource, filepath);
 
@@ -570,11 +574,32 @@ TEST_CASE("sign")
 
     SECTION("payload too large for Ed25519")
     {
-        payload = std::vector<uint8_t>(ED25519_MAX_MSG_SIZE + 1, 0x00);
+        payload = std::vector<uint8_t>(ed25519MaxMessageSize(DeviceType::TROPIC01_SPI) + 1, 0x00);
 
         auto result = device.sign(slot, payload, signature, dataSource);
 
         REQUIRE(result == SystemStatus::DEVICE_ERROR_SIGN_PAYLOAD_TOO_LARGE);
+    }
+
+    SECTION("Ed25519 limit depends on the device")
+    {
+        DeviceManager yubikey(mock, DeviceType::YUBIKEY, mock_logger);
+        mock.readKeyPubKey = mock_ed25519_public_key;
+
+        SECTION("at the limit")
+        {
+            payload = std::vector<uint8_t>(ed25519MaxMessageSize(DeviceType::YUBIKEY), 0x00);
+
+            REQUIRE(yubikey.sign(slot, payload, signature, dataSource) == SystemStatus::OK);
+        }
+
+        SECTION("over the limit")
+        {
+            payload = std::vector<uint8_t>(ed25519MaxMessageSize(DeviceType::YUBIKEY) + 1, 0x00);
+
+            REQUIRE(yubikey.sign(slot, payload, signature, dataSource) ==
+                    SystemStatus::DEVICE_ERROR_SIGN_PAYLOAD_TOO_LARGE);
+        }
     }
 
     SECTION("signing fails")
@@ -638,7 +663,8 @@ TEST_CASE("sign")
 
             SECTION("payload too large for Ed25519")
             {
-                payload = std::vector<uint8_t>(ED25519_MAX_MSG_SIZE + 1, 0x00);
+                payload =
+                    std::vector<uint8_t>(ed25519MaxMessageSize(DeviceType::TROPIC01_SPI) + 1, 0x00);
 
                 auto result = device.sign(slot, payload, signature, dataSource);
 
@@ -718,7 +744,8 @@ TEST_CASE("sign")
 
             SECTION("payload too large for Ed25519")
             {
-                payload = std::vector<uint8_t>(ED25519_MAX_MSG_SIZE + 1, 0x00);
+                payload =
+                    std::vector<uint8_t>(ed25519MaxMessageSize(DeviceType::TROPIC01_SPI) + 1, 0x00);
 
                 auto result = device.sign(slot, payload, signature, dataSource, filepath);
 

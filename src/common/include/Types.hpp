@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -26,6 +28,7 @@ enum class DeviceType
 {
     TROPIC01_SPI,
     TROPIC01_USB,
+    YUBIKEY,
 
     NONE,
 };
@@ -49,9 +52,76 @@ inline SlotRange slotRange(DeviceType device)
         case DeviceType::TROPIC01_SPI:
         case DeviceType::TROPIC01_USB:
             return {0, 31};
+        case DeviceType::YUBIKEY:
+            return {5, 24};
         default:
             assert(false && "Unhandled device value in slotRange()");
             return {0, 0};
+    }
+}
+
+// The longest message a device can sign with an Ed25519 key. Ed25519 signs the whole message,
+// so the device has to receive all of it at once.
+inline std::size_t ed25519MaxMessageSize(DeviceType device)
+{
+    switch (device)
+    {
+        case DeviceType::TROPIC01_SPI:
+        case DeviceType::TROPIC01_USB:
+            return 4096;
+        case DeviceType::YUBIKEY:
+            return 3061;
+        default:
+            assert(false && "Unhandled device value in ed25519MaxMessageSize()");
+            return 0;
+    }
+}
+
+// The secret a device needs before an operation can run.
+enum class Secret
+{
+    NONE,
+    PIN,             // unlocks the use of private keys
+    MANAGEMENT_KEY,  // allows changing what is stored in a slot
+};
+
+inline Secret requiredSecret(DeviceType device, Operation operation)
+{
+    switch (device)
+    {
+        case DeviceType::YUBIKEY:
+            switch (operation)
+            {
+                case Operation::SIGN:
+                    return Secret::PIN;
+                case Operation::GENERATE_KEY:
+                case Operation::ERASE_KEY:
+                    return Secret::MANAGEMENT_KEY;
+                default:
+                    return Secret::NONE;
+            }
+        default:
+            // Other devices, and device-less operations, need no secret.
+            return Secret::NONE;
+    }
+}
+
+// The factory default of a secret, used when the user leaves the prompt empty.
+inline std::optional<std::string> defaultSecret(DeviceType device, Secret secret)
+{
+    if (device != DeviceType::YUBIKEY)
+    {
+        return std::nullopt;
+    }
+
+    switch (secret)
+    {
+        case Secret::PIN:
+            return "123456";
+        case Secret::MANAGEMENT_KEY:
+            return "010203040506070801020304050607080102030405060708";
+        default:
+            return std::nullopt;
     }
 }
 
@@ -60,6 +130,7 @@ inline std::string deviceTypeToString(DeviceType device)
     static const std::unordered_map<DeviceType, std::string> device_map = {
         {DeviceType::TROPIC01_SPI, "tropic01-spi"},
         {DeviceType::TROPIC01_USB, "tropic01-usb"},
+        {DeviceType::YUBIKEY, "yubikey"},
         {DeviceType::NONE, ""},
     };
 

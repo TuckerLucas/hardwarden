@@ -178,7 +178,7 @@ SystemStatus DeviceManager::sign(uint8_t slot, std::vector<uint8_t> payload,
 
     Curve curve = (pubKey.size() == 32) ? Curve::Ed25519 : Curve::P256;
 
-    if (curve == Curve::Ed25519 && payload.size() > ED25519_MAX_MSG_SIZE)
+    if (curve == Curve::Ed25519 && payload.size() > ed25519MaxMessageSize(m_deviceType))
     {
         m_logger.log(Operation::SIGN, m_deviceType,
                      SystemStatus::DEVICE_ERROR_SIGN_PAYLOAD_TOO_LARGE, options);

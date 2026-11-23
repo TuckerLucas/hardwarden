@@ -79,8 +79,8 @@ SystemStatus AuditLogger::log(Operation operation, DeviceType device, SystemStat
     std::string op_str = operationToString(operation);
     std::string audit_res_str = (auditResult == SystemStatus::OK) ? "SUCCESS" : "FAILED";
 
-    // Values are bound, never concatenated into the SQL: user input (e.g. file paths) cannot
-    // break or inject statements.
+    // Values are bound, never concatenated into the SQL, so user input cannot break or inject
+    // statements.
     const char* sql =
         "INSERT INTO audit_log (device, operation, auditResult, options) VALUES (?, ?, ?, ?);";
 

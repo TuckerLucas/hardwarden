@@ -1,11 +1,11 @@
-import subprocess
+"""System tests for TROPIC01 devices. Usage: python3 run_tropic01_tests.py <device>"""
+
 import sys
 
-BINARY = "../build/src/cli/hwarden"
+from helpers import (BINARY, ED25519_VALID_DATA, INVALID_SIGNATURE, P256_VALID_DATA,
+                     confirm_erase, finish, make_get_signature, print_header, run_command,
+                     run_test)
 
-ED25519_VALID_DATA = "hello"
-P256_VALID_DATA = "hardwarden"
-INVALID_SIGNATURE = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 DEVICES = ["tropic01-spi", "tropic01-usb"]
 
 if len(sys.argv) != 2 or sys.argv[1] not in DEVICES:
@@ -15,99 +15,8 @@ if len(sys.argv) != 2 or sys.argv[1] not in DEVICES:
 
 DEVICE = sys.argv[1]
 
-def extract_signature_from_output(output):
-    """Extract hex signature from hardwarden sign command output.
-    
-    WARNING: This parsing depends on CliDisplay::signResult() format.
-    If that format changes, this function must be updated.
-    """
-    lines = output.split('\n')
-    signature = ""
-    in_sig_block = False
-    
-    for line in lines:
-        # Enter signature block after "Signature:" line
-        if "Signature:" in line:
-            in_sig_block = True
-            continue
-        
-        # Skip dash lines
-        if line.startswith('-') or line.strip() == "":
-            if in_sig_block and signature:  # Exit if we've already collected sig
-                break
-            continue
-        
-        # Collect hex lines
-        if in_sig_block and line.strip():
-            if all(c in '0123456789abcdefABCDEF' for c in line.strip()):
-                signature += line.strip()
-    
-    return signature if signature else None
-
-def make_get_signature(sign_command):
-    """Factory function that creates a signature extractor for a specific sign command"""
-    def get_signature():
-        sign_result = run_command(sign_command)
-        return extract_signature_from_output(sign_result.stdout)
-    return get_signature
-
-def run_command(command):
-    return subprocess.run(command, capture_output=True, text=True)
-
-def run_test(description, command, expected_exit_code=0, setup=None, cleanup=None):
-    setup_result = None
-    
-    if setup:
-        if isinstance(setup[0], list) or callable(setup[0]):
-            # List of commands/callables
-            for s in setup:
-                if callable(s):
-                    setup_result = s()
-                else:
-                    run_command(s)
-        else:
-            # Single command
-            run_command(setup)
-
-    # If command is callable, pass setup_result to it
-    if callable(command):
-        actual_command = command(setup_result)
-    else:
-        actual_command = command
-
-    result = run_command(actual_command)
-
-    if cleanup:
-        if isinstance(cleanup[0], list):
-            for c in cleanup:
-                run_command(c)
-        else:
-            run_command(cleanup)
-
-    if result.returncode == expected_exit_code:
-        print(f"\033[92mPASS\033[0m: {description}")
-    else:
-        print(f"\033[91mFAIL\033[0m: {description} (expected {expected_exit_code}, got {result.returncode})")
-
-
-
-print(f"\033[93m{'=' * 50}\033[0m")
-print(f"\033[93mWARNING: System tests will erase ALL keys from\033[0m")
-print(f"\033[93mthe {DEVICE} device before running.\033[0m")
-print()
-print(f"\033[93mDo NOT run on a production device.\033[0m")
-print(f"\033[93m{'=' * 50}\033[0m")
-print()
-response = input("Continue? (yes/no): ")
-if response.lower() != "yes":
-    print("Aborted.")
-    exit(0)
-
-
-
-print("\n" + "="*50)
-print("Running System Tests")
-print("="*50 + "\n")
+confirm_erase(DEVICE)
+print_header()
 
 print("Preparing the device...")
 for slot in range(32):
@@ -227,17 +136,17 @@ run_test("sign - data (P-256)",
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "18"])
 
 run_test("sign - file (Ed25519)",
-         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "test_file.txt"],
+         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "test_file_4096_bytes.txt"],
          setup=[BINARY, DEVICE, "generate-key", "--slot", "19"],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "19"])
 
 run_test("sign - file (P-256)",
-         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "test_file.txt"],
+         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "test_file_4096_bytes.txt"],
          setup=[BINARY, DEVICE, "generate-key", "--slot", "19", "--curve", "p256"],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "19"]) 
 
 run_test("sign - large file (P-256)",
-         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "large_test_file.txt"],
+         [BINARY, DEVICE, "sign", "--slot", "19", "--file", "test_file_5001_bytes.txt"],
          setup=[BINARY, DEVICE, "generate-key", "--slot", "19", "--curve", "p256"],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "19"])      
 
@@ -252,7 +161,7 @@ run_test("sign - key not found (data)",
          expected_exit_code=1)
 
 run_test("sign - key not found (file)",
-         [BINARY, DEVICE, "sign", "--slot", "23", "--file", "test_file.txt"],
+         [BINARY, DEVICE, "sign", "--slot", "23", "--file", "test_file_4096_bytes.txt"],
          expected_exit_code=1) 
 
 # Verify
@@ -267,10 +176,10 @@ run_test("verify - Ed25519 - valid data",
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "0"])
 
 run_test("verify - Ed25519 - valid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "0", "--file", "test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "0", "--file", "test_file_4096_bytes.txt", "--signature", sig],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "0"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "0", "--file", "test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "0", "--file", "test_file_4096_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "0"])     
 
@@ -284,10 +193,10 @@ run_test("verify - Ed25519 - invalid data",
          expected_exit_code=1)
 
 run_test("verify - Ed25519 - invalid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "large_test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "test_file_5001_bytes.txt", "--signature", sig],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "2"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "test_file_4096_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "2"],
          expected_exit_code=1)
@@ -302,10 +211,10 @@ run_test("verify - Ed25519 - invalid signature + valid data",
          expected_exit_code=1)
 
 run_test("verify - Ed25519 - invalid signature + valid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "test_file.txt", "--signature", INVALID_SIGNATURE],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "test_file_4096_bytes.txt", "--signature", INVALID_SIGNATURE],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "2"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "test_file_4096_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "2"],
          expected_exit_code=1)
@@ -319,10 +228,10 @@ run_test("verify - P-256 - valid data",
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "1"])
 
 run_test("verify - P-256 - valid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "1", "--file", "large_test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "1", "--file", "test_file_5001_bytes.txt", "--signature", sig],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "1", "--curve", "p256"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "1", "--file", "large_test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "1", "--file", "test_file_5001_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "1"])
 
@@ -336,10 +245,10 @@ run_test("verify - P-256 - invalid data",
          expected_exit_code=1)
 
 run_test("verify - P-256 - invalid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "3", "--file", "test_file.txt", "--signature", sig],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "3", "--file", "test_file_4096_bytes.txt", "--signature", sig],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "3", "--curve", "p256"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "3", "--file", "large_test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "3", "--file", "test_file_5001_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "3"],
          expected_exit_code=1)
@@ -354,10 +263,10 @@ run_test("verify - P-256 - invalid signature + valid data",
          expected_exit_code=1)
 
 run_test("verify - P-256 - invalid signature + valid file",
-         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "large_test_file.txt", "--signature", INVALID_SIGNATURE],
+         lambda sig: [BINARY, DEVICE, "verify", "--slot", "2", "--file", "test_file_5001_bytes.txt", "--signature", INVALID_SIGNATURE],
          setup=[
              [BINARY, DEVICE, "generate-key", "--slot", "2", "--curve", "p256"],
-             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "large_test_file.txt"])
+             make_get_signature([BINARY, DEVICE, "sign", "--slot", "2", "--file", "test_file_5001_bytes.txt"])
          ],
          cleanup=[BINARY, DEVICE, "erase-key", "--slot", "2"],
          expected_exit_code=1)
@@ -377,4 +286,4 @@ run_test("verify - missing device",
           "--signature", INVALID_SIGNATURE],
          expected_exit_code=1)
 
-print("")    
+finish()

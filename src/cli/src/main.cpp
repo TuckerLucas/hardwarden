@@ -8,6 +8,7 @@
 #include "CliParser.hpp"
 #include "DeviceManager.hpp"
 #include "Pkcs11Device.hpp"
+#include "SecretReader.hpp"
 
 std::string getDbPath();
 
@@ -35,6 +36,8 @@ std::string modulePath(DeviceType device)
             return TROPIC01_SPI_PKCS11_MODULE_PATH;
         case DeviceType::TROPIC01_USB:
             return TROPIC01_USB_PKCS11_MODULE_PATH;
+        case DeviceType::YUBIKEY:
+            return YKCS11_MODULE_PATH;
         default:
             return "";
     }
@@ -58,7 +61,32 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
-    Pkcs11Device se(modulePath(command.device));
+    Pkcs11Device se(modulePath(command.device), command.device);
+    Secret secret = requiredSecret(command.device, command.operation);
+
+    if (secret != Secret::NONE)
+    {
+        const std::optional<std::string> fallback = defaultSecret(command.device, secret);
+        std::string prompt = (secret == Secret::PIN) ? "Enter PIN" : "Enter management key";
+        prompt += fallback ? " [blank to use default]: " : ": ";
+
+        std::optional<std::string> value = readSecret(prompt);
+
+        if (!value)
+        {
+            if (!fallback)
+            {
+                display.secretCancelled(secret);
+                return 1;
+            }
+
+            value = fallback;
+        }
+
+        se.setLogin(secret, *value);
+        wipeSecret(*value);
+    }
+
     AuditLogger logger(getDbPath());
     DeviceManager device(se, command.device, logger);
 
@@ -125,7 +153,7 @@ int main(int argc, const char* argv[])
 
             result = device.readKey(slot, pubKey);
 
-            display.readKeyResult(result, slot, pubKey);
+            display.readKeyResult(result, command.device, slot, pubKey);
 
             break;
         }
@@ -161,7 +189,7 @@ int main(int argc, const char* argv[])
 
                 if (!file.is_open())
                 {
-                    display.signResult(SystemStatus::ERROR_FILE_NOT_FOUND, {});
+                    display.signResult(SystemStatus::ERROR_FILE_NOT_FOUND, command.device, {});
                     return 1;
                 }
 
@@ -171,7 +199,7 @@ int main(int argc, const char* argv[])
 
             result = device.sign(slot, payload, signature, dataSource, filepath);
 
-            display.signResult(result, signature);
+            display.signResult(result, command.device, signature);
 
             break;
         }
@@ -197,7 +225,7 @@ int main(int argc, const char* argv[])
 
                 if (!file.is_open())
                 {
-                    display.verifyResult(SystemStatus::ERROR_FILE_NOT_FOUND);
+                    display.verifyResult(SystemStatus::ERROR_FILE_NOT_FOUND, command.device);
                     return 1;
                 }
 
@@ -209,7 +237,7 @@ int main(int argc, const char* argv[])
 
             result = device.verify(slot, payload, signature, dataSource, filepath);
 
-            display.verifyResult(result);
+            display.verifyResult(result, command.device);
 
             break;
         }

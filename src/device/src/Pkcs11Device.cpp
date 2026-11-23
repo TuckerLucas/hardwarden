@@ -2,19 +2,66 @@
 
 #include <dlfcn.h>
 #include <openssl/bn.h>
+#include <openssl/crypto.h>
 #include <openssl/ec.h>
 #include <openssl/evp.h>
 
 #include <cstring>
 #include <vector>
 
-Pkcs11Device::Pkcs11Device(std::string modulePath) : m_modulePath(std::move(modulePath))
+Pkcs11Device::Pkcs11Device(std::string modulePath, DeviceType device)
+    : m_modulePath(std::move(modulePath)), m_device(device)
 {
 }
 
 Pkcs11Device::~Pkcs11Device()
 {
     deinit();
+    wipeLoginValue();
+}
+
+void Pkcs11Device::setLogin(Secret secret, const std::string& value)
+{
+    wipeLoginValue();
+    m_loginSecret = secret;
+    m_loginValue = value;
+}
+
+void Pkcs11Device::wipeLoginValue()
+{
+    OPENSSL_cleanse(m_loginValue.data(), m_loginValue.size());
+    m_loginValue.clear();
+}
+
+SystemStatus Pkcs11Device::login()
+{
+    CK_USER_TYPE userType = (m_loginSecret == Secret::PIN) ? CKU_USER : CKU_SO;
+
+    CK_RV rv =
+        m_fn->C_Login(m_session, userType, reinterpret_cast<CK_UTF8CHAR_PTR>(m_loginValue.data()),
+                      m_loginValue.size());
+
+    wipeLoginValue();
+
+    bool rejected = (rv == CKR_PIN_INCORRECT || rv == CKR_PIN_INVALID || rv == CKR_PIN_LEN_RANGE);
+
+    if (rv == CKR_OK || rv == CKR_USER_ALREADY_LOGGED_IN)
+    {
+        return SystemStatus::OK;
+    }
+
+    if (rv == CKR_PIN_LOCKED)
+    {
+        return SystemStatus::DEVICE_ERROR_PIN_LOCKED;
+    }
+
+    if (rejected)
+    {
+        return (m_loginSecret == Secret::PIN) ? SystemStatus::DEVICE_ERROR_PIN_INCORRECT
+                                              : SystemStatus::DEVICE_ERROR_MANAGEMENT_KEY_INCORRECT;
+    }
+
+    return SystemStatus::DEVICE_ERROR_LOGIN;
 }
 
 CK_RV Pkcs11Device::findObjects(CK_OBJECT_CLASS objectClass, std::optional<uint8_t> slot,
@@ -120,7 +167,7 @@ SystemStatus Pkcs11Device::init()
 
     m_initialized = true;
 
-    // 4. Find the first slot with a token present (first call gets the count,
+    // 4. Find the first PKCS#11 slot with a device present (first call gets the count,
     //    second call fills the list)
     CK_ULONG count = 0;
 
@@ -140,13 +187,25 @@ SystemStatus Pkcs11Device::init()
 
     m_slotId = slots[0];
 
-    // 5. Open a read/write session on that token
+    // 5. Open a read/write session on that device
     if (m_fn->C_OpenSession(m_slotId, CKF_SERIAL_SESSION | CKF_RW_SESSION, nullptr, nullptr,
                             &m_session) != CKR_OK)
     {
         m_session = CK_INVALID_HANDLE;
         deinit();
         return SystemStatus::DEVICE_ERROR_INIT;
+    }
+
+    // 6. Log in, if this operation needs a secret
+    if (m_loginSecret != Secret::NONE)
+    {
+        SystemStatus result = login();
+
+        if (result != SystemStatus::OK)
+        {
+            deinit();
+            return result;
+        }
     }
 
     return SystemStatus::OK;
@@ -197,7 +256,7 @@ SystemStatus Pkcs11Device::eraseKey(uint8_t slot)
     {
         CK_RV rv = m_fn->C_DestroyObject(m_session, object);
 
-        // On TROPIC01, destroying one half erases the whole slot, so the
+        // Some devices erase the whole slot when one half of the pair is destroyed, so the
         // other half may already be gone. That's fine.
         if (rv != CKR_OK && rv != CKR_OBJECT_HANDLE_INVALID)
         {
@@ -233,7 +292,7 @@ SystemStatus Pkcs11Device::generateKey(uint8_t slot, Curve curve)
         return SystemStatus::DEVICE_ERROR_GENERATE_KEY_SLOT_OCCUPIED;
     }
 
-    // 2. Pick the mechanism and curve OID
+    // 2. Pick the mechanism and the curve, named by OID
     std::vector<CK_BYTE> ecParams;
     CK_MECHANISM mechanism = {0, nullptr, 0};
 
@@ -275,6 +334,17 @@ SystemStatus Pkcs11Device::generateKey(uint8_t slot, Curve curve)
 
     CK_RV rv = m_fn->C_GenerateKeyPair(m_session, &mechanism, publicTemplate, 4, privateTemplate, 5,
                                        &publicKey, &privateKey);
+
+    // PKCS#11 allows naming the Ed25519 curve by OID or by name. Devices accept one or the other,
+    // so the OID is tried first and the name ("edwards25519" as a PrintableString) second.
+    if (rv == CKR_ATTRIBUTE_VALUE_INVALID && curve == Curve::Ed25519)
+    {
+        ecParams = {0x13, 0x0C, 'e', 'd', 'w', 'a', 'r', 'd', 's', '2', '5', '5', '1', '9'};
+        publicTemplate[2] = {CKA_EC_PARAMS, ecParams.data(), ecParams.size()};
+
+        rv = m_fn->C_GenerateKeyPair(m_session, &mechanism, publicTemplate, 4, privateTemplate, 5,
+                                     &publicKey, &privateKey);
+    }
 
     if (rv != CKR_OK)
     {
@@ -323,7 +393,7 @@ SystemStatus Pkcs11Device::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
         return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
     }
 
-    // 1. Find every public key on the token (no slot filter)
+    // 1. Find every public key on the device (no slot filter)
     std::vector<CK_OBJECT_HANDLE> found;
 
     if (findObjects(CKO_PUBLIC_KEY, std::nullopt, found) != CKR_OK)
@@ -332,8 +402,10 @@ SystemStatus Pkcs11Device::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
         return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
     }
 
-    // 2. One entry per slot, empty unless a key is found there
-    pubKeys.assign(32, {});
+    // 2. One entry per slot number up to the device's highest slot, empty unless a key is found
+    //    there. Entries below the lowest slot always stay empty.
+    SlotRange range = slotRange(m_device);
+    pubKeys.assign(range.max + 1, {});
 
     for (CK_OBJECT_HANDLE object : found)
     {
@@ -347,8 +419,8 @@ SystemStatus Pkcs11Device::listKeys(std::vector<std::vector<uint8_t>>& pubKeys)
             return SystemStatus::DEVICE_ERROR_READ_KEY_HW_ERROR;
         }
 
-        // hardwarden slots are a single byte, 0-31. Skip anything else.
-        if (idAttr.ulValueLen != 1 || id[0] >= 32)
+        // Slots are a single byte within the device's slot range. Skip any other object.
+        if (idAttr.ulValueLen != 1 || id[0] < range.min || id[0] > range.max)
         {
             continue;
         }
